@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyvista_utils"
+authors = [
+    {name = "Ivo Steinbrecher", email = "ivo.steinbrecher@unibw.de"},
+]
+description = "Utilities for pyvista"
+dependencies = [
+    "pyvista",
+    "meshpy",
+    "numpy",
+]
+dynamic = ["version"]
+
+[tool.setuptools.packages.find]
+include = ["pyvista_utils"]

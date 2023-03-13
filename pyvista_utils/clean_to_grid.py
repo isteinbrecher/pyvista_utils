@@ -1,10 +1,34 @@
+# -*- coding: utf-8 -*-
+"""
+Implement a clean_to_grid functionality similar to the one provided in
+ParaView. This allows to clean UnstructuredGrid (the clean command in 
+pyvista only works for PolyData).
+"""
+
 import numpy as np
 import pyvista
-
 from meshpy.geometric_search import find_close_points, point_partners_to_unique_indices
 
 
-def clean_to_grid(mesh_in, **kwargs):
+def clean_to_grid(mesh_in: pyvista.UnstructuredGrid, **kwargs):
+    """Clean the mesh, i.e., common points are replaced by a single point. Point
+    data at common points is averaged. Cell data is kept as it is, as the cells
+    do not change with this filter.
+
+    This function is inspired by:
+    https://gist.github.com/gilrrei/e72bc7dd75eb3a3ad38173d0dbbb9c98
+
+    Args
+    ----
+    mesh_in:
+        Mesh to be cleaned
+    **kwargs:
+        Optional arguments are passed to meshpy.geometric_search.find_close_points
+    Return
+    ----
+    mesh_out:
+        The cleaned mesh (a copy of the original mesh where double points are merged)
+    """
 
     # Find unique points
     points = mesh_in.points
