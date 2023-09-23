@@ -11,9 +11,10 @@ from meshpy.geometric_search import find_close_points, point_partners_to_unique_
 
 
 def clean_to_grid(mesh_in: pyvista.UnstructuredGrid, **kwargs):
-    """Clean the mesh, i.e., common points are replaced by a single point. Point
-    data at common points is averaged. Cell data is kept as it is, as the cells
-    do not change with this filter.
+    """Clean the mesh, i.e., overlapping points are replaced by a single point.
+    Point data at overlapping points is averaged. Cell data is kept as it is,
+    as only the cell connectivity changes with this filter but not the cell
+    itself.
 
     This function is inspired by:
     https://gist.github.com/gilrrei/e72bc7dd75eb3a3ad38173d0dbbb9c98
