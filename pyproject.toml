@@ -11,7 +11,7 @@ description = "Utilities for pyvista"
 dependencies = [
     "pyvista",
     "numpy",
-    "meshpy@git+ssh://git@github.com/imcs-compsim/meshpy",
+    "scipy",
 ]
 dynamic = ["version"]
 
