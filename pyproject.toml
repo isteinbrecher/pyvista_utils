@@ -10,8 +10,8 @@ authors = [
 description = "Utilities for pyvista"
 dependencies = [
     "pyvista",
-    "meshpy",
     "numpy",
+    "meshpy@git+ssh://git@github.com/imcs-compsim/meshpy",
 ]
 dynamic = ["version"]
 
