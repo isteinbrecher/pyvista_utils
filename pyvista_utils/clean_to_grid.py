@@ -5,13 +5,13 @@ pyvista only works for PolyData).
 """
 
 import numpy as np
-import pyvista
+import pyvista as pv
 from scipy.spatial import KDTree
 
 
 def clean_to_grid(
-    mesh_in: pyvista.UnstructuredGrid, *, tol: float = 1e-8
-) -> pyvista.UnstructuredGrid:
+    mesh_in: pv.UnstructuredGrid, *, tol: float = 1e-8
+) -> pv.UnstructuredGrid:
     """Clean the mesh, i.e., overlapping points are replaced by a single point.
     Point data at overlapping points is averaged. Cell data is kept as it is,
     as only the cell connectivity changes with this filter but not the cell
@@ -78,7 +78,7 @@ def clean_to_grid(
         index += number_of_points_connected_to_cell + 1
 
     # Create the output mesh
-    mesh_out = pyvista.UnstructuredGrid(cells_out, celltypes_out, cleaned_points)
+    mesh_out = pv.UnstructuredGrid(cells_out, celltypes_out, cleaned_points)
 
     # Set the data values
     mesh_out.cell_data.update(mesh_in.cell_data)
