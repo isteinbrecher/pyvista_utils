@@ -56,7 +56,7 @@ def compare_grids(grid_1, grid_2, tol=1e-10, output=False) -> bool:
 
         if not np.allclose(
             vtk_numpy_support.vtk_to_numpy(array_1),
-            vtk_numpy_support.vtk_to_numpy(array_1),
+            vtk_numpy_support.vtk_to_numpy(array_2),
             atol=tol,
         ):
             return (
