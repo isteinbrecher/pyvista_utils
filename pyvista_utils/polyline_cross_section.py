@@ -31,21 +31,32 @@ def polyline_cross_section(
             raise ValueError("Only poly lines (vtk type 4) are supported")
 
     # Data arrays
-    point_data = grid.GetPointData()
+    point_data_input = grid.GetPointData()
     base_vector_data = [None] * 3
-    data = {}
-    for i_point_data in range(point_data.GetNumberOfArrays()):
-        name = point_data.GetArrayName(i_point_data)
+    point_data = {}
+    for i_point_data in range(point_data_input.GetNumberOfArrays()):
+        name = point_data_input.GetArrayName(i_point_data)
         if name.startswith("base_vector_"):
             i_base = int(name.split("_")[-1])
             base_vector_data[i_base - 1] = vtk_numpy_support.vtk_to_numpy(
-                point_data.GetArray(i_point_data)
+                point_data_input.GetArray(i_point_data)
             )
         else:
-            data[name] = point_data.GetArray(i_point_data)
+            point_data[name] = vtk_numpy_support.vtk_to_numpy(
+                point_data_input.GetArray(i_point_data)
+            )
 
     # New points
     new_point_coordinates = vtk.vtkPoints()
+    new_point_data = {}
+    for data_name in point_data.keys():
+        if point_data[data_name].ndim == 1:
+            n_components = 1
+        else:
+            n_components = point_data[data_name].shape[1]
+        new_point_data[data_name] = vtk.vtkDoubleArray()
+        new_point_data[data_name].SetName(data_name)
+        new_point_data[data_name].SetNumberOfComponents(n_components)
     new_polygons = []
     new_quad4 = []
 
@@ -67,6 +78,17 @@ def polyline_cross_section(
                     + p_polygon[1] * base_vectors[2]
                 )
                 new_point_coordinates.InsertNextPoint(new_coordinate)
+
+                # Set the point data
+                for data_name in new_point_data.keys():
+                    n_components = new_point_data[data_name].GetNumberOfComponents()
+                    if n_components == 1:
+                        new_point_data[data_name].InsertNextValue(
+                            point_data[data_name][point_id]
+                        )
+                    else:
+                        for value in point_data[data_name][point_id]:
+                            new_point_data[data_name].InsertNextValue(value)
 
                 # Set the quad4 cells
                 if not i == 0:
@@ -104,6 +126,8 @@ def polyline_cross_section(
     output_grid = vtk.vtkUnstructuredGrid()
     output_grid.Initialize()
     output_grid.SetPoints(new_point_coordinates)
+    for name in new_point_data.keys():
+        output_grid.GetPointData().AddArray(new_point_data[name])
     output_grid.Allocate(len(new_polygons) + len(new_quad4), 1)
     for cell in new_polygons + new_quad4:
         output_grid.InsertNextCell(cell.GetCellType(), cell.GetPointIds())
