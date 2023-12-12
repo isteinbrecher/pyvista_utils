@@ -109,13 +109,19 @@ def polyline_cross_section(
         i_end = new_point_coordinates.GetNumberOfPoints() - 1
 
         # Set the front and end polygon
-        for index, factor in [[i_start, 1], [i_end, -1]]:
+        for index, reverse in [[i_start, False], [i_end, True]]:
             new_cell = vtk.vtkPolygon()
             new_cell.GetPointIds().SetNumberOfIds(n_points_polygon)
             for i_point_polygon in range(n_points_polygon):
-                new_cell.GetPointIds().SetId(
-                    i_point_polygon, index + factor * i_point_polygon
-                )
+                if not reverse:
+                    new_cell.GetPointIds().SetId(
+                        n_points_polygon - i_point_polygon - 1, index + i_point_polygon
+                    )
+                else:
+                    new_cell.GetPointIds().SetId(
+                        i_point_polygon, index - i_point_polygon
+                    )
+                    print(f"point {index + i_point_polygon}")
             new_polygons.append(new_cell)
 
     # Create the new data for each polyline
