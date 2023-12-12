@@ -5,7 +5,6 @@
 # Import python modules.
 import numpy as np
 import vtk
-from vtk.util import numpy_support as vtk_numpy_support
 
 
 def merge_polylines(
@@ -37,7 +36,7 @@ def merge_polylines(
     # Add the points to the output.
     output_grid.SetPoints(grid.GetPoints())
     for i in range(grid.GetPointData().GetNumberOfArrays()):
-        grid.GetPointData().AddArray(grid.GetPointData().GetArray(i))
+        output_grid.GetPointData().AddArray(grid.GetPointData().GetArray(i))
 
     # Check that all cells are poly lines.
     n_cells = grid.GetNumberOfCells()
