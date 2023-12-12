@@ -5,11 +5,13 @@ import os
 import numpy as np
 import unittest
 import pyvista
+from pyvista_utils.clean_to_grid import clean_to_grid
 from pyvista_utils.compare_grids import compare_grids
+from pyvista_utils.merge_polylines import merge_polylines
 from pyvista_utils.sort_grid import sort_grid
 
 
-testing_input = "test/test_files"
+testing_input = os.path.join(os.path.dirname(__file__), "test_files")
 
 
 class TestSortGrid(unittest.TestCase):
@@ -117,6 +119,24 @@ class TestSortGrid(unittest.TestCase):
         compare = compare_grids(
             mesh_mixed_cells_sorted, mesh_mixed_cells_reference, output=True
         )
+        self.assertTrue(compare[0], msg=compare[1])
+
+
+class TestMergePolylines(unittest.TestCase):
+    """This class contains test cases for the sort merge_polylines function"""
+
+    def test_merge_polylines(self):
+        """Test the merge_polylines function."""
+
+        grid = pyvista.get_reader(
+            os.path.join(testing_input, "merge_polylines_raw.vtu")
+        ).read()
+        grid = clean_to_grid(grid)
+        grid_merged = merge_polylines(grid, max_angle=np.pi)
+        grid_ref = pyvista.get_reader(
+            os.path.join(testing_input, "merge_polylines_reference.vtu")
+        ).read()
+        compare = compare_grids(grid_merged, grid_ref, output=True)
         self.assertTrue(compare[0], msg=compare[1])
 
 
