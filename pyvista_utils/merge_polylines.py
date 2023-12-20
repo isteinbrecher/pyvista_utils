@@ -6,6 +6,9 @@
 import numpy as np
 import vtk
 
+# Import local stuff
+from .utils import vtk_id_to_list
+
 
 def merge_polylines(
     grid: vtk.vtkUnstructuredGrid,
@@ -43,12 +46,6 @@ def merge_polylines(
     for i in range(n_cells):
         if not grid.GetCellType(i) == 4:
             raise ValueError("Only poly lines (vtk type 4) are supported")
-
-    def vtk_id_to_list(vtk_id_list):
-        """Convert a vtk id list to a python list. TODO: Move this to a general utils file."""
-        return [
-            int(vtk_id_list.GetId(i_id)) for i_id in range(vtk_id_list.GetNumberOfIds())
-        ]
 
     def find_connected_cells(grid, cell_id):
         """Start with polyline "cell_id" in grid and search all polylines connected

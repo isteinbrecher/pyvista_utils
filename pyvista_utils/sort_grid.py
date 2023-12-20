@@ -6,6 +6,9 @@ import pyvista as pv
 import numpy as np
 import vtk
 
+# Import local stuff
+from .utils import vtk_id_to_list
+
 
 def sort_grid(
     grid: pv.UnstructuredGrid, sort_point_field=None, sort_cell_field=None
@@ -92,9 +95,7 @@ def sort_grid(
         else:
             id_vtk_list = vtk.vtkIdList()
             grid.GetFaceStream(i_cell, id_vtk_list)
-            id_list = [
-                id_vtk_list.GetId(i) for i in range(id_vtk_list.GetNumberOfIds())
-            ]
+            id_list = vtk_id_to_list(id_vtk_list)
             n_points = 0
             inner = 1
             sorted_connectivity = [id_list[0]]

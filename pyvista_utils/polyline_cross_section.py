@@ -6,12 +6,8 @@ import numpy as np
 import vtk
 from vtk.util import numpy_support as vtk_numpy_support
 
-
-def vtk_id_to_list(vtk_id_list):
-    """Convert a vtk id list to a python list. TODO: Move this to a general utils file."""
-    return [
-        int(vtk_id_list.GetId(i_id)) for i_id in range(vtk_id_list.GetNumberOfIds())
-    ]
+# Import local stuff
+from .utils import vtk_id_to_list
 
 
 def polyline_cross_section(
