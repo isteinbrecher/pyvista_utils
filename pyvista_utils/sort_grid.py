@@ -23,13 +23,14 @@ def sort_grid(
     """
 
     def get_sorting_indices(data, n_items, sorting_keys):
-        """Get the indices that shall be used for sorting the data
+        """Get the indices that shall be used for sorting the data and the reverse
+        sorting indices as well
 
         Also process the input sorting key variable for different kinds of input
         """
 
         if sorting_keys is None:
-            return False, None
+            return False, None, None
         else:
             if isinstance(sorting_keys, str):
                 sorting_keys = [sorting_keys]
@@ -38,14 +39,25 @@ def sort_grid(
             # Reverse the ordering of the keys, as this is required for lexsort
             for i, key in enumerate(sorting_keys[::-1]):
                 sort_data[i, :] = np.array(data[key], dtype=int)
-            return True, np.lexsort(sort_data)
+            sort_indices = np.lexsort(sort_data)
+            sort_indices_reverse = np.array(range(len(sort_indices)))
+            for i, index in enumerate(sort_indices):
+                sort_indices_reverse[index] = i
+            return True, sort_indices, sort_indices_reverse
 
-    sort_points, sorted_indices_points = get_sorting_indices(
-        grid.point_data, grid.number_of_points, sort_point_field
-    )
-    sort_cells, sorted_indices_cells = get_sorting_indices(
-        grid.cell_data, grid.number_of_cells, sort_cell_field
-    )
+    (
+        sort_points,
+        sorted_indices_points,
+        sorted_indices_reverse_points,
+    ) = get_sorting_indices(grid.point_data, grid.number_of_points, sort_point_field)
+    (
+        sort_cells,
+        sorted_indices_cells,
+        sorted_indices_reverse_cells,
+    ) = get_sorting_indices(grid.cell_data, grid.number_of_cells, sort_cell_field)
+
+    if not (sort_points or sort_cells):
+        raise ValueError("Nothing to sort in sort_grid")
 
     def sort_data(data, sorted_indices):
         """Sort the given data by the given indices. If no sorting indices are given
@@ -58,14 +70,11 @@ def sort_grid(
     # Get the sorted connectivity array
     cells = grid.cells
     cell_types = grid.celltypes
-    # Get reverse sorting array for the cell connectivity
-    inverted_sort_array = np.array(range(len(sorted_indices_points)))
-    for i, index in enumerate(sorted_indices_points):
-        inverted_sort_array[index] = i
+
     # Get the sorted cells with the sorted connectivity
     points_sorted = sort_data(grid.points, sorted_indices_points)
     cell_types_sorted = sort_data(cell_types, sorted_indices_cells)
-    cells_sorted_list = [None for i_cell in range(grid.n_cells)]
+    cells_sorted_list = [None] * grid.n_cells
     index = 0
     i_cell = 0
     while index < len(cells):
@@ -75,7 +84,9 @@ def sort_grid(
             for inner in range(n_indices):
                 index += 1
                 if sort_points:
-                    sorted_connectivity[inner] = inverted_sort_array[cells[index]]
+                    sorted_connectivity[inner] = sorted_indices_reverse_points[
+                        cells[index]
+                    ]
                 else:
                     sorted_connectivity[inner] = cells[index]
         else:
@@ -94,14 +105,18 @@ def sort_grid(
                 inner += 1
                 for i_point in range(n_points):
                     if sort_points:
-                        sorted_connectivity.append(inverted_sort_array[id_list[inner]])
+                        sorted_connectivity.append(
+                            sorted_indices_reverse_points[id_list[inner]]
+                        )
                     else:
                         sorted_connectivity.append(id_list[inner])
                     inner += 1
                     n_points += 1
             index += n_points
         if sort_cells:
-            cells_sorted_list[sorted_indices_cells[i_cell]] = sorted_connectivity
+            cells_sorted_list[
+                sorted_indices_reverse_cells[i_cell]
+            ] = sorted_connectivity
         else:
             cells_sorted_list[i_cell] = sorted_connectivity
         index += 1
