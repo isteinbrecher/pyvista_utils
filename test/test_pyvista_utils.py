@@ -85,7 +85,9 @@ class TestSortGrid(unittest.TestCase):
 
         # Sort the parallel grid w.r.t. to the cell id
         mesh_parallel_sorted = sort_grid(
-            mesh_parallel, sort_point_field=["element_gid"]
+            mesh_parallel,
+            sort_cell_field=["element_gid"],
+            sort_point_field=["element_gid"],
         )
 
         # Remove data created for sorting
