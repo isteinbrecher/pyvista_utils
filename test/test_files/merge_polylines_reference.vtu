@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian" header_type="UInt32" compressor="vtkZLibDataCompressor">
   <UnstructuredGrid>
-    <Piece NumberOfPoints="89" NumberOfCells="12">
+    <Piece NumberOfPoints="89" NumberOfCells="17">
       <PointData>
         <DataArray type="Float64" Name="node_value" NumberOfComponents="3" format="ascii" RangeMin="0.8660254037844386" RangeMax="1.7320508075688772">
           0.5 0.5 0.5 0.5 0.5 0.5
@@ -286,29 +286,32 @@
       <Cells>
         <DataArray type="Int64" Name="connectivity" format="ascii" RangeMin="0" RangeMax="88">
           35 55 23 29 86 80
-          87 78 58 11 18 88
-          67 44 45 37 22 74
-          59 61 70 4 51 42
-          58 7 26 10 19 66
-          73 38 54 14 81 20
-          30 0 32 84 69 52
-          46 16 63 47 28 34
-          12 56 62 50 48 53
-          49 76 8 65 41 39
-          17 57 79 24 40 83
-          83 31 25 36 43 83
-          5 75 21 71 2 15
-          13 60 6 9 3 64
-          85 68 72 82 2 2
-          1 33 77 27
+          87 78 70 4 51 42
+          58 58 11 18 88 67
+          67 44 45 37 22 22
+          74 59 61 70 7 26
+          10 19 66 73 38 54
+          14 81 20 30 0 32
+          84 69 52 46 16 63
+          47 28 34 12 56 62
+          50 48 53 49 76 8
+          65 41 39 17 57 79
+          24 40 83 83 31 25
+          36 43 83 5 75 21
+          71 85 68 72 82 2
+          2 1 33 77 27 2
+          15 13 60 6 85 64
+          3 9 6
         </DataArray>
-        <DataArray type="Int64" Name="offsets" format="ascii" RangeMin="3" RangeMax="94">
-          3 8 25 34 43 52
-          61 66 71 76 89 94
+        <DataArray type="Int64" Name="offsets" format="ascii" RangeMin="3" RangeMax="99">
+          3 8 13 18 23 28
+          37 46 55 64 69 74
+          79 84 89 94 99
         </DataArray>
         <DataArray type="UInt8" Name="types" format="ascii" RangeMin="4" RangeMax="4">
           4 4 4 4 4 4
           4 4 4 4 4 4
+          4 4 4 4 4
         </DataArray>
       </Cells>
     </Piece>

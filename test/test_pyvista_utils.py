@@ -134,10 +134,11 @@ class TestMergePolylines(unittest.TestCase):
             os.path.join(testing_input, "merge_polylines_raw.vtu")
         ).read()
         grid = clean_to_grid(grid)
-        grid_merged = merge_polylines(grid, max_angle=np.pi)
+        grid_merged = merge_polylines(grid)
         grid_ref = pyvista.get_reader(
             os.path.join(testing_input, "merge_polylines_reference.vtu")
         ).read()
+
         compare = compare_grids(grid_merged, grid_ref, output=True)
         self.assertTrue(compare[0], msg=compare[1])
 
