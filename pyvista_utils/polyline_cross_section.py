@@ -11,15 +11,25 @@ from .utils import vtk_id_to_list
 
 
 def polyline_cross_section(
-    grid: vtk.vtkUnstructuredGrid, polygon_points
+    grid: vtk.vtkUnstructuredGrid, cross_section_points, *, closed: bool = True
 ) -> vtk.vtkUnstructuredGrid:
-    """Extrude a profile defined by the corner points of a polygon along a polyline."""
+    """Extrude a profile defined by the cross section coordinates along a polyline.
+
+    Args
+    ----
+    grid:
+        Polyline defining the centerline of the extruded structure
+    cross_section_points:
+        In-cross-section coordinates defining the profile
+    closed:
+        Flag if the profile is open or closed
+    """
 
     # Get information about input grid
     n_cells = grid.GetNumberOfCells()
 
-    # Get information about polygon
-    n_points_polygon = len(polygon_points)
+    # Get number of cross-section points
+    n_cross_section_points = len(cross_section_points)
 
     # Check that all cells are poly lines.
     for i in range(n_cells):
@@ -62,16 +72,20 @@ def polyline_cross_section(
         i_start = new_point_coordinates.GetNumberOfPoints()
 
         point_ids = vtk_id_to_list(polyline.GetPointIds())
-        for i, point_id in enumerate(point_ids):
+        for i_point_centerline, point_centerline_id in enumerate(point_ids):
             i_start_inner = new_point_coordinates.GetNumberOfPoints()
 
-            coordinates = np.array(grid.GetPoint(point_id))
-            base_vectors = [base_vector_data[i_dir][point_id] for i_dir in range(3)]
-            for i_polygon, p_polygon in enumerate(polygon_points):
+            coordinates = np.array(grid.GetPoint(point_centerline_id))
+            base_vectors = [
+                base_vector_data[i_dir][point_centerline_id] for i_dir in range(3)
+            ]
+            for i_cross_section_point, cross_section_point in enumerate(
+                cross_section_points
+            ):
                 new_coordinate = (
                     coordinates
-                    + p_polygon[0] * base_vectors[1]
-                    + p_polygon[1] * base_vectors[2]
+                    + cross_section_point[0] * base_vectors[1]
+                    + cross_section_point[1] * base_vectors[2]
                 )
                 new_point_coordinates.InsertNextPoint(new_coordinate)
 
@@ -80,45 +94,61 @@ def polyline_cross_section(
                     n_components = new_point_data[data_name].GetNumberOfComponents()
                     if n_components == 1:
                         new_point_data[data_name].InsertNextValue(
-                            point_data[data_name][point_id]
+                            point_data[data_name][point_centerline_id]
                         )
                     else:
-                        for value in point_data[data_name][point_id]:
+                        for value in point_data[data_name][point_centerline_id]:
                             new_point_data[data_name].InsertNextValue(value)
 
                 # Set the quad4 cells
-                if not i == 0:
+                is_start_centerline = i_point_centerline == 0
+                is_last_cross_section = (
+                    n_cross_section_points - 1 == i_cross_section_point
+                )
+                if (not is_start_centerline) and not (
+                    is_last_cross_section and not closed
+                ):
                     new_cell = vtk.vtkQuad()
                     new_cell.GetPointIds().SetNumberOfIds(4)
                     new_cell.GetPointIds().SetId(
-                        0, i_start_inner - n_points_polygon + i_polygon
+                        0,
+                        i_start_inner - n_cross_section_points + i_cross_section_point,
                     )
-                    new_cell.GetPointIds().SetId(1, i_start_inner + i_polygon)
-                    if i_polygon == n_points_polygon - 1:
-                        i_polygon = -1
-                    new_cell.GetPointIds().SetId(2, i_start_inner + i_polygon + 1)
                     new_cell.GetPointIds().SetId(
-                        3, i_start_inner - n_points_polygon + i_polygon + 1
+                        1, i_start_inner + i_cross_section_point
+                    )
+                    if i_cross_section_point == n_cross_section_points - 1:
+                        i_cross_section_point = -1
+                    new_cell.GetPointIds().SetId(
+                        2, i_start_inner + i_cross_section_point + 1
+                    )
+                    new_cell.GetPointIds().SetId(
+                        3,
+                        i_start_inner
+                        - n_cross_section_points
+                        + i_cross_section_point
+                        + 1,
                     )
                     new_quad4.append(new_cell)
 
         i_end = new_point_coordinates.GetNumberOfPoints() - 1
 
         # Set the front and end polygon
-        for index, reverse in [[i_start, False], [i_end, True]]:
-            new_cell = vtk.vtkPolygon()
-            new_cell.GetPointIds().SetNumberOfIds(n_points_polygon)
-            for i_point_polygon in range(n_points_polygon):
-                if not reverse:
-                    new_cell.GetPointIds().SetId(
-                        n_points_polygon - i_point_polygon - 1, index + i_point_polygon
-                    )
-                else:
-                    new_cell.GetPointIds().SetId(
-                        i_point_polygon, index - i_point_polygon
-                    )
-                    print(f"point {index + i_point_polygon}")
-            new_polygons.append(new_cell)
+        if closed:
+            for index, reverse in [[i_start, False], [i_end, True]]:
+                new_cell = vtk.vtkPolygon()
+                new_cell.GetPointIds().SetNumberOfIds(n_cross_section_points)
+                for i_point_polygon in range(n_cross_section_points):
+                    if not reverse:
+                        new_cell.GetPointIds().SetId(
+                            n_cross_section_points - i_point_polygon - 1,
+                            index + i_point_polygon,
+                        )
+                    else:
+                        new_cell.GetPointIds().SetId(
+                            i_point_polygon, index - i_point_polygon
+                        )
+                new_polygons.append(new_cell)
 
     # Create the new data for each polyline
     for i_cell in range(n_cells):
