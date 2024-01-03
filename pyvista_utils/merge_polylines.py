@@ -44,8 +44,13 @@ def merge_polylines(
     # Check that all cells are poly lines.
     n_cells = grid.GetNumberOfCells()
     for i in range(n_cells):
-        if not grid.GetCellType(i) == 4:
-            raise ValueError("Only poly lines (vtk type 4) are supported")
+        cell = grid.GetCell(i)
+        if not (isinstance(cell, vtk.vtkLine) or isinstance(cell, vtk.vtkPolyLine)):
+            raise ValueError(
+                "Only lines (vtk type 3) and poly lines (vtk type 4) are supported. Got {}".format(
+                    type(cell)
+                )
+            )
 
     def find_connected_cells(grid, cell_id):
         """Start with polyline "cell_id" in grid and search all polylines connected
