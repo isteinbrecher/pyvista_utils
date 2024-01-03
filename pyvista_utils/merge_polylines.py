@@ -72,7 +72,7 @@ def merge_polylines(
         # Get the angle between the two
         return np.dot(tangent_at_point, cell_tangent)
 
-    def find_next_connected_cell(grid, old_cell_tracker):
+    def find_next_connected_polyline(grid, old_cell_tracker):
         """Start with the first old cell that was not found yet. Then search all cells
         connected to that one.
 
@@ -88,9 +88,7 @@ def merge_polylines(
         else:
             return None
 
-        def add_cell_recursive(
-            connected_cell_points, old_cell_tracker, connected_point_id
-        ):
+        def add_next_cell(connected_cell_points, old_cell_tracker, connected_point_id):
             """Start at the initial point and loop over lines as long as a connectivity is found"""
             id_list = vtk.vtkIdList()
             grid.GetPointCells(connected_point_id, id_list)
@@ -103,7 +101,7 @@ def merge_polylines(
 
             if len(possible_next_cell_ids) == 0:
                 # In this case we are at the end of the poly line
-                return connected_cell_points
+                return connected_cell_points, None
 
             # Get the the outward facing tangent at the given point
             if connected_cell_points[-1] == connected_point_id:
@@ -132,10 +130,10 @@ def merge_polylines(
                 # In this case there are either no or multiple lines connected which are
                 # smooth to the given one. There is no unique way to continue this, so we
                 # stop here.
-                return connected_cell_points
+                return connected_cell_points, None
             elif old_cell_tracker[smooth_connected_cells[0]] is None:
                 # The smooth connected cell is already accounted for in the new cells
-                return connected_cell_points
+                return connected_cell_points, None
             else:
                 # We want to continue along the found smooth cell
                 new_cell_id = smooth_connected_cells[0]
@@ -172,23 +170,19 @@ def merge_polylines(
                 next_start_index = 0
 
             old_cell_tracker[new_cell_id] = None
-            return add_cell_recursive(
-                connected_cell_points,
-                old_cell_tracker,
-                new_cell_point_ids[next_start_index],
-            )
+            return connected_cell_points, new_cell_point_ids[next_start_index]
 
         old_cell_tracker[next_cell_id] = None
         connected_cell_points = vtk_id_to_list(grid.GetCell(next_cell_id).GetPointIds())
         start_id = connected_cell_points[0]
         end_id = connected_cell_points[-1]
 
-        connected_cell_points = add_cell_recursive(
-            connected_cell_points, old_cell_tracker, start_id
-        )
-        connected_cell_points = add_cell_recursive(
-            connected_cell_points, old_cell_tracker, end_id
-        )
+        for start_index in [start_id, end_id]:
+            next_point_id = start_index
+            while next_point_id is not None:
+                connected_cell_points, next_point_id = add_next_cell(
+                    connected_cell_points, old_cell_tracker, next_point_id
+                )
 
         return connected_cell_points
 
@@ -197,7 +191,7 @@ def merge_polylines(
     old_cell_tracker = list(range(n_cells))
     new_cells = []
     while True:
-        connected_cell_point_ids = find_next_connected_cell(grid, old_cell_tracker)
+        connected_cell_point_ids = find_next_connected_polyline(grid, old_cell_tracker)
 
         if connected_cell_point_ids is None:
             break
