@@ -5,7 +5,6 @@ import os
 import numpy as np
 import unittest
 import pyvista
-from pyvista_utils.clean_to_grid import clean_to_grid
 from pyvista_utils.compare_grids import compare_grids
 from pyvista_utils.merge_polylines import merge_polylines
 from pyvista_utils.sort_grid import sort_grid
@@ -133,7 +132,7 @@ class TestMergePolylines(unittest.TestCase):
         grid = pyvista.get_reader(
             os.path.join(testing_input, "merge_polylines_raw.vtu")
         ).read()
-        grid = clean_to_grid(grid)
+        grid = grid.clean()
         grid_merged = merge_polylines(grid)
         grid_ref = pyvista.get_reader(
             os.path.join(testing_input, "merge_polylines_reference.vtu")
