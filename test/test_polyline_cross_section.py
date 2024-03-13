@@ -22,7 +22,7 @@ def test_polyline_cross_section(request, closed):
     # Load the helix centerline
     grid = pyvista.get_reader(os.path.join(testing_input, "helix_beam.vtu")).read()
     grid = clean_to_grid(grid)
-    grid = merge_polylines(grid, max_angle=np.pi)
+    grid = merge_polylines(grid)
 
     # Sweep a cross section along the helix
     cross_section_points = [[0, 0], [1, 0], [1, 1], [0, 1], [0.7, 0.3]]
