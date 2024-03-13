@@ -6,7 +6,6 @@ import os
 import numpy as np
 import pyvista
 import pytest
-from pyvista_utils.clean_to_grid import clean_to_grid
 from pyvista_utils.compare_grids import compare_grids
 from pyvista_utils.merge_polylines import merge_polylines
 from pyvista_utils.polyline_cross_section import polyline_cross_section
@@ -21,7 +20,7 @@ def test_polyline_cross_section(request, closed):
 
     # Load the helix centerline
     grid = pyvista.get_reader(os.path.join(testing_input, "helix_beam.vtu")).read()
-    grid = clean_to_grid(grid)
+    grid = grid.clean()
     grid = merge_polylines(grid)
 
     # Sweep a cross section along the helix
