@@ -12,7 +12,7 @@ from .vtk_data_structures_utils import vtk_id_to_list
 
 def polyline_cross_section(
     grid: vtk.vtkUnstructuredGrid, cross_section_points, *, closed: bool = True
-) -> vtk.vtkUnstructuredGrid:
+) -> vtk.vtkPolyData:
     """Extrude a profile defined by the cross section coordinates along a polyline.
 
     Args
@@ -155,7 +155,7 @@ def polyline_cross_section(
         extrude_cross_section_polyline(grid.GetCell(i_cell))
 
     # Add the new points and cells
-    output_grid = vtk.vtkUnstructuredGrid()
+    output_grid = vtk.vtkPolyData()
     output_grid.Initialize()
     output_grid.SetPoints(new_point_coordinates)
     for name in new_point_data.keys():
