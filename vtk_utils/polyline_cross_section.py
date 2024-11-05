@@ -7,7 +7,7 @@ import vtk
 from vtk.util import numpy_support as vtk_numpy_support
 
 # Import local stuff
-from .utils import vtk_id_to_list
+from .vtk_data_structures_utils import vtk_id_to_list
 
 
 def polyline_cross_section(

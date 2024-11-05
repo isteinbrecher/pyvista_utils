@@ -5,10 +5,10 @@
 import os
 import pyvista
 import pytest
-from pyvista_utils.compare_grids import compare_grids
-from pyvista_utils.merge_polylines import merge_polylines
-from pyvista_utils.polyline_cross_section import polyline_cross_section
 
+from vtk_utils.compare_grids import compare_grids
+from vtk_utils.merge_polylines import merge_polylines
+from vtk_utils.polyline_cross_section import polyline_cross_section
 
 from . import TESTING_INPUT
 

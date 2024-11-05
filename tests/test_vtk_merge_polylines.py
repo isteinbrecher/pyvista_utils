@@ -3,9 +3,9 @@
 
 import os
 import pyvista
-from pyvista_utils.compare_grids import compare_grids
-from pyvista_utils.merge_polylines import merge_polylines
 
+from vtk_utils.compare_grids import compare_grids
+from vtk_utils.merge_polylines import merge_polylines
 
 from . import TESTING_INPUT
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Utility functions"""
+"""Utility functions for vtk data structures"""
 
 
 def vtk_id_to_list(vtk_id_list):

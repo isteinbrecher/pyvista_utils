@@ -7,7 +7,7 @@ import numpy as np
 import vtk
 
 # Import local stuff
-from .utils import vtk_id_to_list
+from vtk_utils.vtk_data_structures_utils import vtk_id_to_list
 
 
 def sort_grid(

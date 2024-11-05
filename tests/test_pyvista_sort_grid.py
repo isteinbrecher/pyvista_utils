@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Test the functionality of pyvista_utlis"""
+"""Test the functionality of sort_grid"""
 
 import os
 import numpy as np
 import pyvista
-from pyvista_utils.compare_grids import compare_grids
-from pyvista_utils.sort_grid import sort_grid
 
+from pyvista_utils.sort_grid import sort_grid
+from vtk_utils.compare_grids import compare_grids
 
 from . import TESTING_INPUT
 
