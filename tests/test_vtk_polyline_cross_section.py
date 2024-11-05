@@ -3,7 +3,6 @@
 
 
 import os
-import numpy as np
 import pyvista
 import pytest
 from pyvista_utils.compare_grids import compare_grids
@@ -11,15 +10,15 @@ from pyvista_utils.merge_polylines import merge_polylines
 from pyvista_utils.polyline_cross_section import polyline_cross_section
 
 
-testing_input = os.path.join(os.path.dirname(__file__), "test_files")
+from . import TESTING_INPUT
 
 
 @pytest.mark.parametrize("closed", [True, False])
-def test_polyline_cross_section(request, closed):
+def test_vtk_polyline_cross_section(request, closed):
     """Test the polyline_cross_section function"""
 
     # Load the helix centerline
-    grid = pyvista.get_reader(os.path.join(testing_input, "helix_beam.vtu")).read()
+    grid = pyvista.get_reader(os.path.join(TESTING_INPUT, "helix_beam.vtu")).read()
     grid = grid.clean()
     grid = merge_polylines(grid)
 
@@ -31,12 +30,12 @@ def test_polyline_cross_section(request, closed):
 
     # Compare with reference result
     test_name = (
-        request.node.name.split("test_")[1].split("[")[0]
+        request.node.name.split("test_vtk_")[1].split("[")[0]
         + "_"
         + ("closed" if closed else "open")
     )
     helix_3d_reference = pyvista.get_reader(
-        os.path.join(testing_input, test_name + ".vtu")
+        os.path.join(TESTING_INPUT, test_name + ".vtu")
     ).read()
     is_equal, output = compare_grids(helix_3d, helix_3d_reference, output=True)
     assert is_equal, output
