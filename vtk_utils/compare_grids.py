@@ -6,15 +6,17 @@ import numpy as np
 from vtk.util import numpy_support as vtk_numpy_support
 
 
-def compare_grids(grid_1, grid_2, tol=1e-10, output=False) -> bool:
+def compare_grids(grid_1, grid_2, *, rtol=1e-8, atol=1e-8, output=False) -> bool:
     """Compare two grids to each other
 
     Args
     ----
     grid_1, grid_2:
         Input grids which are compared to each other
-    tol: float
-        Tolerance for comparing floating point data
+    rtol: float
+        Relative tolerance for comparing floating point data
+    atol: float
+        Absolute tolerance for comparing floating point data
     output: bool
         If output of the results of the comparison should be given
     """
@@ -57,7 +59,8 @@ def compare_grids(grid_1, grid_2, tol=1e-10, output=False) -> bool:
         if not np.allclose(
             vtk_numpy_support.vtk_to_numpy(array_1),
             vtk_numpy_support.vtk_to_numpy(array_2),
-            atol=tol,
+            rtol=rtol,
+            atol=atol,
         ):
             return (
                 False,
