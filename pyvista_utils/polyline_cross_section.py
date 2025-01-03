@@ -15,7 +15,7 @@ def polyline_cross_section(
     cross_section_points,
     *,
     closed: bool = True,
-    separate_surfaces: bool = False
+    separate_surfaces: bool = False,
 ) -> pv.UnstructuredGrid:
     """Extrude a profile defined by the cross section coordinates along a polyline.
 

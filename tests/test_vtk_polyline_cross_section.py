@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Test the functionality of polyline_cross_section"""
 
-
 import os
-import pyvista
+
 import pytest
+import pyvista
 
 from vtk_utils.compare_grids import compare_grids
 from vtk_utils.merge_polylines import merge_polylines

@@ -2,6 +2,7 @@
 """Test the functionality of sort_grid"""
 
 import os
+
 import numpy as np
 import pyvista
 

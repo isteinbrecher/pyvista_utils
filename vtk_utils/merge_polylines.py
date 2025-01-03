@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Merge lines or polylines with each other that represent a continuous curve"""
 
-
 # Import python modules.
 import numpy as np
 import vtk

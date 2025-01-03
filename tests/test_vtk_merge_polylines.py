@@ -2,6 +2,7 @@
 """Test the functionality of merge_polylines"""
 
 import os
+
 import pyvista
 
 from vtk_utils.compare_grids import compare_grids

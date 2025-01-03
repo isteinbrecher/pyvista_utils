@@ -2,8 +2,8 @@
 """Sort a vtk grid based on cell and/or point values."""
 
 # Import python modules.
-import pyvista as pv
 import numpy as np
+import pyvista as pv
 import vtk
 
 # Import local stuff
@@ -115,9 +115,9 @@ def sort_grid(
                     n_points += 1
             index += n_points
         if sort_cells:
-            cells_sorted_list[
-                sorted_indices_reverse_cells[i_cell]
-            ] = sorted_connectivity
+            cells_sorted_list[sorted_indices_reverse_cells[i_cell]] = (
+                sorted_connectivity
+            )
         else:
             cells_sorted_list[i_cell] = sorted_connectivity
         index += 1

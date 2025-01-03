@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Test the functionality of temporal_interpolator"""
 
-
 import os
+
 import pyvista as pv
 
-from vtk_utils.compare_grids import compare_grids
 from pyvista_utils.temporal_interpolator import temporal_interpolator
+from vtk_utils.compare_grids import compare_grids
 
 from . import TESTING_INPUT
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Interpolate between time steps in pvd time step series"""
 
-
 import numpy as np
 import pyvista as pv
 

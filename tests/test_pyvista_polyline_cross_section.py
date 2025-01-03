@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """Test the functionality of polyline_cross_section"""
 
-
 import os
-import pyvista
-import pytest
 
+import pytest
+import pyvista
+
+from pyvista_utils.polyline_cross_section import polyline_cross_section
 from vtk_utils.compare_grids import compare_grids
 from vtk_utils.merge_polylines import merge_polylines
-from pyvista_utils.polyline_cross_section import polyline_cross_section
 
 from . import TESTING_INPUT
 
