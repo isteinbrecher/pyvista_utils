@@ -21,6 +21,7 @@ def temporal_interpolator(
     """
 
     def get_mesh(time_index) -> pv.UnstructuredGrid:
+        """Return the mesh at a given time index"""
         pvd_collection.set_active_time_point(time_index)
         return pvd_collection.read()[0]
 
