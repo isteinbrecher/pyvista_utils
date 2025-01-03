@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test the functionality of temporal_interpolator"""
+"""Test the functionality of temporal_interpolator."""
 
 import os
 
@@ -12,7 +12,7 @@ from . import TESTING_INPUT
 
 
 def test_pyvista_temporal_interpolator():
-    """Test the temporal_interpolator function"""
+    """Test the temporal_interpolator function."""
 
     # Get the pvd reader
     pvd_path = os.path.join(TESTING_INPUT, "temporal_interpolator.pvd")

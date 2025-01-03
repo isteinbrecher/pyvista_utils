@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Define the main namespace for testing
-"""
+"""Define the main namespace for testing."""
 
 import os
 

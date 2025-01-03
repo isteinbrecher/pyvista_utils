@@ -13,7 +13,7 @@ from vtk_utils.vtk_data_structures_utils import vtk_id_to_list
 def sort_grid(
     grid: pv.UnstructuredGrid, sort_point_field=None, sort_cell_field=None
 ) -> pv.UnstructuredGrid:
-    """Sort the input grid by given arrays
+    """Sort the input grid by given arrays.
 
     Args
     ----
@@ -26,10 +26,11 @@ def sort_grid(
     """
 
     def get_sorting_indices(data, n_items, sorting_keys):
-        """Get the indices that shall be used for sorting the data and the reverse
-        sorting indices as well
+        """Get the indices that shall be used for sorting the data and the
+        reverse sorting indices as well.
 
-        Also process the input sorting key variable for different kinds of input
+        Also process the input sorting key variable for different kinds
+        of input
         """
 
         if sorting_keys is None:
@@ -63,8 +64,11 @@ def sort_grid(
         raise ValueError("Nothing to sort in sort_grid")
 
     def sort_data(data, sorted_indices):
-        """Sort the given data by the given indices. If no sorting indices are given
-        then the original data is returned."""
+        """Sort the given data by the given indices.
+
+        If no sorting indices are given then the original data is
+        returned.
+        """
         if sorted_indices is None:
             return data
         else:

@@ -17,7 +17,8 @@ def polyline_cross_section(
     closed: bool = True,
     separate_surfaces: bool = False,
 ) -> pv.UnstructuredGrid:
-    """Extrude a profile defined by the cross section coordinates along a polyline.
+    """Extrude a profile defined by the cross section coordinates along a
+    polyline.
 
     This function calls the vtk version under the hood, but adds some additional
     functionality.

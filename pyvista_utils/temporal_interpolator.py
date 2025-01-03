@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Interpolate between time steps in pvd time step series"""
+"""Interpolate between time steps in pvd time step series."""
 
 import numpy as np
 import pyvista as pv
@@ -8,7 +8,7 @@ import pyvista as pv
 def temporal_interpolator(
     pvd_collection: pv.PVDReader, time: float, *, tol=1e-10
 ) -> pv.UnstructuredGrid:
-    """Interpolate between time steps in pvd time step series
+    """Interpolate between time steps in pvd time step series.
 
     Args
     ----
@@ -21,7 +21,7 @@ def temporal_interpolator(
     """
 
     def get_mesh(time_index) -> pv.UnstructuredGrid:
-        """Return the mesh at a given time index"""
+        """Return the mesh at a given time index."""
         pvd_collection.set_active_time_point(time_index)
         return pvd_collection.read()[0]
 

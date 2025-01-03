@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test the functionality of merge_polylines"""
+"""Test the functionality of merge_polylines."""
 
 import os
 
