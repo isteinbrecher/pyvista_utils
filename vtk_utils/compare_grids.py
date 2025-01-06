@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Compare two grids to each other."""
 
-# Import python modules.
 import numpy as np
 from vtk.util import numpy_support as vtk_numpy_support
 

@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """Extrude a profile along a polyline."""
 
-# Import python modules.
 import numpy as np
 import vtk
 from vtk.util import numpy_support as vtk_numpy_support
 
-# Import local stuff
 from .vtk_data_structures_utils import vtk_id_to_list
 
 

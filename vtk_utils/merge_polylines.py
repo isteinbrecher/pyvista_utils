@@ -2,11 +2,9 @@
 """Merge lines or polylines with each other that represent a continuous
 curve."""
 
-# Import python modules.
 import numpy as np
 import vtk
 
-# Import local stuff
 from .vtk_data_structures_utils import vtk_id_to_list
 
 

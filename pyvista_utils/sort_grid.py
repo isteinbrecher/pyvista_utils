@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """Sort a vtk grid based on cell and/or point values."""
 
-# Import python modules.
 import numpy as np
 import pyvista as pv
 import vtk
 
-# Import local stuff
 from vtk_utils.vtk_data_structures_utils import vtk_id_to_list
 
 
