@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 """Compare two grids to each other."""
 
+from typing import Tuple, Union
+
 import numpy as np
 from vtk.util import numpy_support as vtk_numpy_support
 
 
-def compare_grids(grid_1, grid_2, *, rtol=None, atol=None, output=False) -> bool:
+def compare_grids(
+    grid_1, grid_2, *, rtol=None, atol=None, output=False
+) -> Union[bool, Tuple[bool, list[str]]]:
     """Compare two grids to each other.
 
     Args
