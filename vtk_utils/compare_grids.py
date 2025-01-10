@@ -6,7 +6,7 @@ import numpy as np
 from vtk.util import numpy_support as vtk_numpy_support
 
 
-def compare_grids(grid_1, grid_2, *, rtol=1e-8, atol=1e-8, output=False) -> bool:
+def compare_grids(grid_1, grid_2, *, rtol=None, atol=None, output=False) -> bool:
     """Compare two grids to each other
 
     Args
@@ -20,6 +20,11 @@ def compare_grids(grid_1, grid_2, *, rtol=1e-8, atol=1e-8, output=False) -> bool
     output: bool
         If output of the results of the comparison should be given
     """
+
+    if rtol is None:
+        rtol = 1e-8
+    if atol is None:
+        atol = 1e-8
 
     def compare_arrays(array_1, array_2, name):
         """Compare two arrays"""
