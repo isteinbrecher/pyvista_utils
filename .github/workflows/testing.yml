@@ -30,6 +30,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install .
+      - name: Code checks
+        run: |
+          pre-commit install --install-hooks
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            SKIP=no-commit-to-branch pre-commit run --all-files
+          else
+            pre-commit run --all-files
+          fi
       - name: Test with pytest
         run: |
           pip install pytest
