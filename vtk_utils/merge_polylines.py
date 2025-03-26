@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Merge lines or polylines with each other that represent a continuous curve"""
+"""Merge lines or polylines with each other that represent a continuous
+curve."""
 
-
-# Import python modules.
 import numpy as np
 import vtk
 
-# Import local stuff
 from .vtk_data_structures_utils import vtk_id_to_list
 
 
@@ -16,7 +14,8 @@ def merge_polylines(
     output_grid: vtk.vtkUnstructuredGrid = None,
     smooth_angle=135.0 * np.pi / 180.0,
 ) -> vtk.vtkUnstructuredGrid:
-    """Merge lines or polylines with each other that represent a continuous curve
+    """Merge lines or polylines with each other that represent a continuous
+    curve.
 
     Args
     ----
@@ -53,7 +52,8 @@ def merge_polylines(
             )
 
     def get_angle_between_lines(tangent_at_point, point_id, cell_id):
-        """Get the dot product of the tangents at the connection point between connecting cells"""
+        """Get the dot product of the tangents at the connection point between
+        connecting cells."""
 
         cell_point_ids = vtk_id_to_list(grid.GetCell(cell_id).GetPointIds())
         if cell_point_ids[-1] == point_id:
@@ -73,11 +73,11 @@ def merge_polylines(
         return np.dot(tangent_at_point, cell_tangent)
 
     def find_next_connected_polyline(grid, old_cell_tracker):
-        """Start with the first old cell that was not found yet. Then search all cells
-        connected to that one.
+        """Start with the first old cell that was not found yet. Then search
+        all cells connected to that one.
 
-        Return all point ids that make up the new poly line.
-        Return None if all cells have been found.
+        Return all point ids that make up the new poly line. Return None
+        if all cells have been found.
         """
 
         # Take the next available cell and look for all connected cells
@@ -89,7 +89,8 @@ def merge_polylines(
             return None
 
         def add_next_cell(connected_cell_points, old_cell_tracker, connected_point_id):
-            """Start at the initial point and loop over lines as long as a connectivity is found"""
+            """Start at the initial point and loop over lines as long as a
+            connectivity is found."""
             id_list = vtk.vtkIdList()
             grid.GetPointCells(connected_point_id, id_list)
             cell_connectivity = vtk_id_to_list(id_list)

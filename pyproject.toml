@@ -20,3 +20,10 @@ include = [
     "pyvista_utils",
     "vtk_utils",
 ]
+
+[project.optional-dependencies]
+dev = [
+  "pre-commit",
+  "pytest",
+  "pytest-cov"
+]

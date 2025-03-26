@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Test the functionality of polyline_cross_section"""
-
+"""Test the functionality of polyline_cross_section."""
 
 import os
-import pyvista
+
 import pytest
+import pyvista
 
 from vtk_utils.compare_grids import compare_grids
 from vtk_utils.merge_polylines import merge_polylines
@@ -15,7 +15,7 @@ from . import TESTING_INPUT
 
 @pytest.mark.parametrize("closed", [True, False])
 def test_vtk_polyline_cross_section(request, closed):
-    """Test the polyline_cross_section function"""
+    """Test the polyline_cross_section function."""
 
     # Load the helix centerline
     grid = pyvista.get_reader(os.path.join(TESTING_INPUT, "helix_beam.vtu")).read()

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Test the functionality of temporal_interpolator"""
-
+"""Test the functionality of temporal_interpolator."""
 
 import os
+
 import pyvista as pv
 
-from vtk_utils.compare_grids import compare_grids
 from pyvista_utils.temporal_interpolator import temporal_interpolator
+from vtk_utils.compare_grids import compare_grids
 
 from . import TESTING_INPUT
 
 
 def test_pyvista_temporal_interpolator():
-    """Test the temporal_interpolator function"""
+    """Test the temporal_interpolator function."""
 
     # Get the pvd reader
     pvd_path = os.path.join(TESTING_INPUT, "temporal_interpolator.pvd")

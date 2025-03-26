@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Compare two grids to each other"""
+"""Compare two grids to each other."""
 
-# Import python modules.
+from typing import Tuple, Union
+
 import numpy as np
 from vtk.util import numpy_support as vtk_numpy_support
 
 
-def compare_grids(grid_1, grid_2, *, rtol=None, atol=None, output=False) -> bool:
-    """Compare two grids to each other
+def compare_grids(
+    grid_1, grid_2, *, rtol=None, atol=None, output=False
+) -> Union[bool, Tuple[bool, list[str]]]:
+    """Compare two grids to each other.
 
     Args
     ----
@@ -27,7 +30,7 @@ def compare_grids(grid_1, grid_2, *, rtol=None, atol=None, output=False) -> bool
         atol = 1e-8
 
     def compare_arrays(array_1, array_2, name):
-        """Compare two arrays"""
+        """Compare two arrays."""
 
         if array_1 is None and array_2 is None:
             return True, f"{name}: OK (empty)"
@@ -106,7 +109,7 @@ def compare_grids(grid_1, grid_2, *, rtol=None, atol=None, output=False) -> bool
     lines.append(string)
 
     def compare_data_fields(data_1, data_2, name):
-        """Compare multiple data sets grouped together"""
+        """Compare multiple data sets grouped together."""
 
         names_1, names_2 = [
             set([data.GetArrayName(i) for i in range(data.GetNumberOfArrays())])

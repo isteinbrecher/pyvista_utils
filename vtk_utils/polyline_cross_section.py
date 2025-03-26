@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 """Extrude a profile along a polyline."""
 
-# Import python modules.
+from typing import List
+
 import numpy as np
 import vtk
+from numpy.typing import NDArray
 from vtk.util import numpy_support as vtk_numpy_support
 
-# Import local stuff
 from .vtk_data_structures_utils import vtk_id_to_list
 
 
 def polyline_cross_section(
     grid: vtk.vtkUnstructuredGrid, cross_section_points, *, closed: bool = True
 ) -> vtk.vtkPolyData:
-    """Extrude a profile defined by the cross section coordinates along a polyline.
+    """Extrude a profile defined by the cross section coordinates along a
+    polyline.
 
     Args
     ----
@@ -38,7 +40,7 @@ def polyline_cross_section(
 
     # Data arrays
     point_data_input = grid.GetPointData()
-    base_vector_data = [None] * 3
+    base_vector_data: List[NDArray] = [None] * 3
     point_data = {}
     for i_point_data in range(point_data_input.GetNumberOfArrays()):
         name = point_data_input.GetArrayName(i_point_data)
@@ -67,7 +69,7 @@ def polyline_cross_section(
     new_quad4 = []
 
     def extrude_cross_section_polyline(polyline: vtk.vtkPolyLine):
-        """Extrude the cross section along the given polyline"""
+        """Extrude the cross section along the given polyline."""
 
         i_start = new_point_coordinates.GetNumberOfPoints()
 

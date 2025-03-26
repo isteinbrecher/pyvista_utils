@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """Extrude a profile along a polyline."""
 
-# Import python modules
 import pyvista as pv
 
-# Import local stuff
 from vtk_utils.polyline_cross_section import (
     polyline_cross_section as vtk_polyline_cross_section,
 )
@@ -15,9 +13,10 @@ def polyline_cross_section(
     cross_section_points,
     *,
     closed: bool = True,
-    separate_surfaces: bool = False
+    separate_surfaces: bool = False,
 ) -> pv.UnstructuredGrid:
-    """Extrude a profile defined by the cross section coordinates along a polyline.
+    """Extrude a profile defined by the cross section coordinates along a
+    polyline.
 
     This function calls the vtk version under the hood, but adds some additional
     functionality.

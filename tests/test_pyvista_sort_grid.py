@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Test the functionality of sort_grid"""
+"""Test the functionality of sort_grid."""
 
 import os
+
 import numpy as np
 import pyvista
 
@@ -12,10 +13,13 @@ from . import TESTING_INPUT
 
 
 def test_pyvista_sort_grid_complete():
-    """Test the sort grid function. This is done by comparing FEM grids that were
-    generated with a different number of processors. In this test we completely
-    sort the grid, i.e., we sort all points such that their ordering is completely
-    defined by the sorting keys"""
+    """Test the sort grid function.
+
+    This is done by comparing FEM grids that were generated with a
+    different number of processors. In this test we completely sort the
+    grid, i.e., we sort all points such that their ordering is
+    completely defined by the sorting keys
+    """
 
     mesh_serial, mesh_parallel = [
         pyvista.get_reader(os.path.join(TESTING_INPUT, name)).read()
@@ -67,10 +71,13 @@ def test_pyvista_sort_grid_complete():
 
 
 def test_pyvista_sort_grid_partial():
-    """Test the sort grid function. This is done by comparing FEM grids that were
-    generated with a different number of processors. In this test we completely
-    only partially sort the grid, i.e., this tests how the original ordering
-    is preserved after a sort."""
+    """Test the sort grid function.
+
+    This is done by comparing FEM grids that were generated with a
+    different number of processors. In this test we completely only
+    partially sort the grid, i.e., this tests how the original ordering
+    is preserved after a sort.
+    """
 
     mesh_serial, mesh_parallel = [
         pyvista.get_reader(os.path.join(TESTING_INPUT, name)).read()
