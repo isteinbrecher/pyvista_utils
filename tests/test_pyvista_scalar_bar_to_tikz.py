@@ -42,7 +42,7 @@ def test_pyvista_temporal_interpolator(tmp_path, request):
 
     # Compare the created TikZ code.
     with open(tmp_path / (name + ".tex"), "r") as tikz_file:
-        tikz_code = tikz_file.read()
+        tikz_code = tikz_file.read().strip()
     with open(Path(TESTING_INPUT) / (testname + ".tex"), "r") as tikz_file:
-        tikz_code_ref = tikz_file.read()
+        tikz_code_ref = tikz_file.read().strip()
     assert tikz_code == tikz_code_ref
