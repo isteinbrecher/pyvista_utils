@@ -38,6 +38,8 @@ jobs:
           else
             pre-commit run --all-files
           fi
+      - name: Setup headless display # Not needed for macOS
+        uses: pyvista/setup-headless-display-action@v3
       - name: Test with pytest
         run: |
           pytest tests/*.py
