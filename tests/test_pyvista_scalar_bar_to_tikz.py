@@ -39,7 +39,6 @@ def test_pyvista_temporal_interpolator(tmp_path, request):
 
     name = "plot_to_tikz"
     export_to_tikz(tmp_path / name, plotter, dpi=250, is_testing=True)
-    print(tmp_path)
 
     # Compare the created TikZ code.
     with open(tmp_path / (name + ".tex"), "r") as tikz_file:
