@@ -142,8 +142,9 @@ def export_to_tikz(
     plotter: pv.Plotter,
     *,
     dpi: int = 300,
-    figure_path="",
-    number_format="{$\\pgfmathprintnumber[sci,precision=1,sci generic={mantissa sep=,exponent={\\mathrm{e}{##1}}}]{\\tick}$}",
+    figure_path: str = "",
+    number_format: str = "{$\\pgfmathprintnumber[sci,precision=1,sci generic={mantissa sep=,exponent={\\mathrm{e}{##1}}}]{\\tick}$}",
+    is_testing: bool = True,
 ):
     """Export a screenshot and also export TikZ code that overlays a TikZ
     scalar bar.
@@ -175,7 +176,10 @@ def export_to_tikz(
     original_data = [_hide_scalar_bar(scalar_bar) for scalar_bar in scalar_bars]
 
     # Save the screenshot
-    image_pixel_data = plotter.screenshot(image_path)
+    if not is_testing:
+        image_pixel_data = plotter.screenshot(image_path)
+    else:
+        image_pixel_data = plotter.screenshot(None, return_img=True)
 
     # Reset the scalar bar properties
     for scalar_bar, data in zip(scalar_bars, original_data):
