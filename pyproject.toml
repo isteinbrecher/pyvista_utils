@@ -11,6 +11,7 @@ description = "Utilities for pyvista"
 dependencies = [
     "pyvista",
     "numpy",
+    "opencv-python",
     "scipy",
 ]
 dynamic = ["version"]
