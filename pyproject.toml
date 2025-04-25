@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Utilities for pyvista"
 dependencies = [
-    "pyvista",
+    "pyvista<0.45.0",
     "numpy",
     "opencv-python",
     "scipy",
