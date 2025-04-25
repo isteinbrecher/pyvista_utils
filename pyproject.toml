@@ -16,12 +16,6 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[tool.setuptools.packages.find]
-include = [
-    "pyvista_utils",
-    "vtk_utils",
-]
-
 [project.optional-dependencies]
 dev = [
   "pre-commit",
