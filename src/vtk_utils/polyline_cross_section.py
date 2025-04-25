@@ -8,7 +8,7 @@ import vtk
 from numpy.typing import NDArray
 from vtk.util import numpy_support as vtk_numpy_support
 
-from .vtk_data_structures_utils import vtk_id_to_list
+from vtk_utils.vtk_data_structures_utils import vtk_id_to_list
 
 
 def polyline_cross_section(
