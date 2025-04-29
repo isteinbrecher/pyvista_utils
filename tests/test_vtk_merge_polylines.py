@@ -21,24 +21,69 @@
 # THE SOFTWARE.
 """Test the functionality of merge_polylines."""
 
-import pyvista
+import numpy as np
+import pytest
+import pyvista as pv
 
 from vtk_utils.merge_polylines import merge_polylines
 
+CLEAN_GRID_TOL = 1e-10
 
+
+@pytest.mark.parametrize("clean", [False, True])
 def test_vtk_merge_polylines(
-    get_corresponding_reference_file_path, assert_results_equal
+    clean, get_corresponding_reference_file_path, assert_results_equal
 ):
     """Test the merge_polylines function."""
 
-    grid = pyvista.get_reader(
+    grid = pv.get_reader(
         get_corresponding_reference_file_path(additional_identifier="raw")
     ).read()
 
-    grid = grid.clean()
+    identifier = None
+    if clean:
+        # For some reason the default tolerance does not work here.
+        grid = grid.clean(tolerance=CLEAN_GRID_TOL)
+        identifier = "clean"
+
     grid_merged = merge_polylines(grid)
 
     assert_results_equal(
-        get_corresponding_reference_file_path(),
+        get_corresponding_reference_file_path(additional_identifier=identifier),
+        grid_merged,
+    )
+
+
+@pytest.mark.parametrize(
+    ["smooth_angle", "smooth_angle_name"],
+    [[None, "default"], [0.5 * np.pi, "large_angle"]],
+)
+@pytest.mark.parametrize("clean", [False, True])
+def test_vtk_merge_polylines_closed(
+    smooth_angle,
+    smooth_angle_name,
+    clean,
+    get_corresponding_reference_file_path,
+    assert_results_equal,
+):
+    """Test the merge_polylines function for a closed polygon."""
+
+    identifier = [smooth_angle_name]
+
+    grid = pv.get_reader(
+        get_corresponding_reference_file_path(additional_identifier="raw")
+    ).read()
+
+    if clean:
+        # For some reason the default tolerance does not work here.
+        grid = grid.clean(tolerance=CLEAN_GRID_TOL)
+        identifier.append("clean")
+
+    grid_merged = merge_polylines(grid, smooth_angle=smooth_angle)
+
+    assert_results_equal(
+        get_corresponding_reference_file_path(
+            additional_identifier="_".join(identifier)
+        ),
         grid_merged,
     )
