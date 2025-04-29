@@ -22,3 +22,7 @@ dev = [
   "pytest",
   "pytest-cov"
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p pytest_cov --cov-report=term --cov-report=html --cov=src/"

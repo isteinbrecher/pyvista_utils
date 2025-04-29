@@ -28,13 +28,11 @@ from pyvista import examples
 
 from pyvista_utils.scalar_bar_to_tikz import export_to_tikz
 
-from . import TESTING_INPUT
 
-
-def test_pyvista_temporal_interpolator(tmp_path, request):
+def test_pyvista_scalar_bar_to_tikz(
+    get_corresponding_reference_file_path, assert_results_equal, tmp_path
+):
     """Test the temporal_interpolator function."""
-
-    testname = request.node.name
 
     # Load an example mesh with scalar data
     mesh = examples.load_random_hills()
@@ -63,6 +61,6 @@ def test_pyvista_temporal_interpolator(tmp_path, request):
     # Compare the created TikZ code.
     with open(tmp_path / (name + ".tex"), "r") as tikz_file:
         tikz_code = tikz_file.read().strip()
-    with open(Path(TESTING_INPUT) / (testname + ".tex"), "r") as tikz_file:
+    with open(get_corresponding_reference_file_path(extension="tex"), "r") as tikz_file:
         tikz_code_ref = tikz_file.read().strip()
     assert tikz_code == tikz_code_ref
