@@ -27,12 +27,11 @@ import numpy as np
 import pyvista
 
 from pyvista_utils.sort_grid import sort_grid
-from vtk_utils.compare_grids import compare_grids
-
-from . import TESTING_INPUT
 
 
-def test_pyvista_sort_grid_complete():
+def test_pyvista_sort_grid_complete(
+    get_corresponding_reference_file_path, assert_results_equal
+):
     """Test the sort grid function.
 
     This is done by comparing FEM grids that were generated with a
@@ -42,8 +41,10 @@ def test_pyvista_sort_grid_complete():
     """
 
     mesh_serial, mesh_parallel = [
-        pyvista.get_reader(os.path.join(TESTING_INPUT, name)).read()
-        for name in ["sort_serial.vtu", "sort_parallel.vtu"]
+        pyvista.get_reader(
+            get_corresponding_reference_file_path(reference_file_base_name=name)
+        ).read()
+        for name in ["sort_serial", "sort_parallel"]
     ]
 
     # Since each element writes it's own nodes, we first sort the nodes by the cell id
@@ -86,11 +87,12 @@ def test_pyvista_sort_grid_complete():
     del mesh_parallel_sorted.cell_data["element_gid_10"]
 
     # Compare the two grids
-    compare = compare_grids(mesh_parallel_sorted, mesh_serial_sorted, output=True)
-    assert compare[0], compare[1]
+    assert_results_equal(mesh_parallel_sorted, mesh_serial_sorted)
 
 
-def test_pyvista_sort_grid_partial():
+def test_pyvista_sort_grid_partial(
+    get_corresponding_reference_file_path, assert_results_equal
+):
     """Test the sort grid function.
 
     This is done by comparing FEM grids that were generated with a
@@ -100,8 +102,10 @@ def test_pyvista_sort_grid_partial():
     """
 
     mesh_serial, mesh_parallel = [
-        pyvista.get_reader(os.path.join(TESTING_INPUT, name)).read()
-        for name in ["sort_serial.vtu", "sort_parallel.vtu"]
+        pyvista.get_reader(
+            get_corresponding_reference_file_path(reference_file_base_name=name)
+        ).read()
+        for name in ["sort_serial", "sort_parallel"]
     ]
 
     # Since each element writes it's own nodes, we first sort the nodes by the cell id
@@ -118,14 +122,19 @@ def test_pyvista_sort_grid_partial():
     del mesh_parallel_sorted.point_data["element_gid"]
 
     # Compare the two grids
-    compare = compare_grids(mesh_parallel_sorted, mesh_serial, output=True)
-    assert compare[0], compare[1]
+    assert_results_equal(mesh_parallel_sorted, mesh_serial)
 
 
-def test_pyvista_sort_grid_mixed_types():
+def test_pyvista_sort_grid_mixed_types(
+    get_corresponding_reference_file_path, assert_results_equal
+):
     """Test that the sort grid function can handle polyhedrons."""
 
-    mesh_mixed_cells = pyvista.read(os.path.join(TESTING_INPUT, "mixed_cell_types.vtu"))
+    mesh_mixed_cells = pyvista.get_reader(
+        get_corresponding_reference_file_path(
+            reference_file_base_name="mixed_cell_types"
+        )
+    ).read()
 
     # Sort the parallel grid
     mesh_mixed_cells.point_data["sort_id"] = range(mesh_mixed_cells.number_of_points)[
@@ -134,10 +143,9 @@ def test_pyvista_sort_grid_mixed_types():
     mesh_mixed_cells_sorted = sort_grid(mesh_mixed_cells, sort_point_field=["sort_id"])
 
     # Compare with the reference grid
-    mesh_mixed_cells_reference = pyvista.read(
-        os.path.join(TESTING_INPUT, "mixed_cell_types_sorted.vtu")
+    assert_results_equal(
+        get_corresponding_reference_file_path(
+            reference_file_base_name="mixed_cell_types_sorted"
+        ),
+        mesh_mixed_cells_sorted,
     )
-    compare = compare_grids(
-        mesh_mixed_cells_sorted, mesh_mixed_cells_reference, output=True
-    )
-    assert compare[0], compare[1]

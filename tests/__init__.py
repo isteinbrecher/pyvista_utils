@@ -20,7 +20,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """Define the main namespace for testing."""
-
-import os
-
-TESTING_INPUT = os.path.join(os.path.dirname(__file__), "test_files")
