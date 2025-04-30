@@ -22,43 +22,410 @@
 """Merge lines or polylines with each other that represent a continuous
 curve."""
 
+from typing import List, Optional
+
 import numpy as np
 import vtk
+from scipy.spatial import KDTree
 
+from vtk_utils.geometric_search import (
+    pairs_to_partner_list,
+    point_partners_to_partner_indices,
+)
 from vtk_utils.vtk_data_structures_utils import vtk_id_to_list
+
+
+class _MergePolylineData:
+    """Common data required to merge polylines."""
+
+    def __init__(
+        self,
+        old_cell_tracker: List[Optional[int]],
+        partner_list: List[int],
+        partner_grouped: List[List[int]],
+        smooth_angle: float,
+    ):
+        self.old_cell_tracker = old_cell_tracker
+        self.partner_list = partner_list
+        self.partner_grouped = partner_grouped
+        self.smooth_angle = smooth_angle
+
+
+class _MergePoint:
+    """Structure to hold either one or two point IDs.
+
+    If one ID is present, this point will be taken as is from the
+    original mesh. If two IDs are present, the two points will be
+    merged.
+    """
+
+    def __init__(self, index_1: int):
+        self.index_1 = index_1
+        self.index_2: Optional[int] = None
+
+        # ID of this point in the new grid
+        self.point_id = None
+
+
+class _PossibleCell:
+    """Structure for next possible cells to add to the current merged
+    polyline."""
+
+    def __init__(self, cell_id: int, point_id: int):
+        self.cell_id = cell_id
+        self.point_id = point_id
+        self.tangent = None
+
+    def set_cell_tangent(self, grid: vtk.vtkUnstructuredGrid) -> None:
+        """Evaluate and set the tangent of this possible next cell.
+
+        Args:
+            grid: Grid the cell belongs to.
+            cell_id: Global index of the cell.
+            point_id: Global index of the point where the tangent should be evaluated.
+                Has to be either the start or endpoint of the cell.
+
+        Returns:
+            Tangent at the given point.
+        """
+
+        cell_point_ids = vtk_id_to_list(grid.GetCell(self.cell_id).GetPointIds())
+        self.tangent = _get_indices_tangent(grid, cell_point_ids, self.point_id)
+
+
+class _MergedPolyline:
+    """Structure to hold a single merged polyline."""
+
+    def __init__(self, connected_cell_points: List[_MergePoint]):
+        self.connected_cell_points = connected_cell_points
+        self.last_cell_id: Optional[int] = None
+
+    def check_closed(self, data: _MergePolylineData) -> None:
+        """Check if first and last point are the same, either by node ID or by
+        position.
+
+        If so, we set the start and end point to be equal to each other,
+        so they can the same point in the created grid.
+        """
+
+        if (
+            self.connected_cell_points[0].index_1
+            == self.connected_cell_points[-1].index_1
+        ):
+            self.connected_cell_points[-1] = self.connected_cell_points[0]
+        elif not -1 == (
+            partner_id := data.partner_list[self.connected_cell_points[0].index_1]
+        ):
+            if (
+                self.connected_cell_points[-1].index_1
+                in data.partner_grouped[partner_id]
+            ):
+                self.connected_cell_points[0].index_2 = self.connected_cell_points[
+                    -1
+                ].index_1
+                self.connected_cell_points[-1] = self.connected_cell_points[0]
+
+
+def _smooth_angle_check(
+    tangent_1: np.ndarray, tangent_2: np.ndarray, smooth_angle: float
+) -> bool:
+    """Check if the angle between the two tangents is larger than
+    `smooth_angle`.
+
+    The tangents are always outward pointing, thus we get the angle pi
+    if the tangents represent a straight polyline.
+    """
+    dot = np.dot(tangent_1, tangent_2)
+    return np.cos(smooth_angle) > dot
+
+
+def _get_indices_tangent(
+    grid: vtk.vtkUnstructuredGrid, connectivity: List[int], point_id: int
+) -> np.ndarray:
+    """Get the tangent of a polygon defined by the connectivity list.
+
+    Args:
+        grid: Grid the cell belongs to.
+        connectivity: Connectivity list of the polygon.
+        point_id: Global index of the point where the tangent should be evaluated.
+            Has to be either the start or endpoint of the polygon.
+
+    Returns:
+        Tangent at the given point.
+    """
+
+    if connectivity[-1] == point_id:
+        tangent_point_indices = [-2, -1]
+    elif connectivity[0] == point_id:
+        tangent_point_indices = [1, 0]
+    else:
+        raise ValueError("Given point index does not match the connectivity array")
+    points_for_tangent = [
+        np.array(grid.GetPoint(connectivity[index])) for index in tangent_point_indices
+    ]
+    tangent = points_for_tangent[1] - points_for_tangent[0]
+    tangent = tangent / np.linalg.norm(tangent)
+    return tangent
+
+
+def _add_next_cell(
+    grid: vtk.vtkUnstructuredGrid,
+    merge_polyline_data: _MergePolylineData,
+    merged_polyline: _MergedPolyline,
+    connected_point_id: int,
+) -> Optional[int]:
+    """Start at the initial point and loop over lines as long as a connectivity
+    is found."""
+
+    # Get all possible cells that are next in line.
+    # First get the ones that are connected to the current cell via the connectivity entries.
+    id_list = vtk.vtkIdList()
+    grid.GetPointCells(connected_point_id, id_list)
+    cell_connectivity = vtk_id_to_list(id_list)
+    possible_next_cells = [
+        _PossibleCell(cell_id, connected_point_id)
+        for cell_id in cell_connectivity
+        if not cell_id == merged_polyline.last_cell_id
+    ]
+    # Extend the possible connected cells by spatially close ones.
+    partner_index = merge_polyline_data.partner_list[connected_point_id]
+    if not partner_index == -1:
+        partner_points = merge_polyline_data.partner_grouped[partner_index]
+        for point_id in partner_points:
+            if point_id == connected_point_id:
+                continue
+            id_list = vtk.vtkIdList()
+            grid.GetPointCells(point_id, id_list)
+            cell_connectivity = vtk_id_to_list(id_list)
+            for cell_id in cell_connectivity:
+                possible_next_cells.append(_PossibleCell(cell_id, point_id))
+
+    # Check the angle between this line and all connected cells
+    smooth_connected_cells: List[_PossibleCell] = []
+    tangent = _get_indices_tangent(
+        grid,
+        [merge_point.index_1 for merge_point in merged_polyline.connected_cell_points],
+        connected_point_id,
+    )
+    for possible_cell in possible_next_cells:
+        possible_cell.set_cell_tangent(grid)
+        if _smooth_angle_check(
+            tangent, possible_cell.tangent, merge_polyline_data.smooth_angle
+        ):
+            smooth_connected_cells.append(possible_cell)
+
+    if len(smooth_connected_cells) == 0 or len(smooth_connected_cells) > 1:
+        # In this case there are either no or multiple lines connected which are
+        # smooth to the given one. There is no unique way to continue this, so we
+        # stop here.
+        return None
+    elif (
+        merge_polyline_data.old_cell_tracker[smooth_connected_cells[0].cell_id] is None
+    ):
+        # The smooth connected cell is already accounted for in the new cells
+        return None
+    else:
+        # We want to continue along the found smooth cell
+        new_cell = smooth_connected_cells[0]
+
+        # We have to check that the next cell is not smooth to another cell
+        # in possible cells (the last cell is not in possible cells). This can
+        # happen for bifurcations. There we could run into issues depending on which
+        # search direction we have when reaching the bifurcation.
+        for possible_cell in possible_next_cells:
+            if not possible_cell.cell_id == new_cell.cell_id:
+                if _smooth_angle_check(
+                    new_cell.tangent,
+                    possible_cell.tangent,
+                    merge_polyline_data.smooth_angle,
+                ):
+                    # This means that at this point there is no unique way to
+                    # continue the smooth curve, so we stop.
+                    return None
+
+    # Add the new cell and its points (in correct order).
+    new_cell_point_ids = [
+        _MergePoint(index)
+        for index in vtk_id_to_list(grid.GetCell(new_cell.cell_id).GetPointIds())
+    ]
+    if (
+        new_cell_point_ids[0].index_1 == new_cell.point_id
+        and connected_point_id == merged_polyline.connected_cell_points[-1].index_1
+    ):
+        # First point of this cell is added to the last point of the last cell.
+        extend = True
+    elif (
+        new_cell_point_ids[-1].index_1 == new_cell.point_id
+        and connected_point_id == merged_polyline.connected_cell_points[-1].index_1
+    ):
+        # Last point of this cell is added to the last point of the last cell.
+        extend = True
+        new_cell_point_ids.reverse()
+    elif (
+        new_cell_point_ids[0].index_1 == new_cell.point_id
+        and connected_point_id == merged_polyline.connected_cell_points[0].index_1
+    ):
+        # First point of this cell is added to the first point of the last cell.
+        extend = False
+        new_cell_point_ids.reverse()
+    elif (
+        new_cell_point_ids[-1].index_1 == new_cell.point_id
+        and connected_point_id == merged_polyline.connected_cell_points[0].index_1
+    ):
+        # Last point of this cell is added to the first point of the last cell.
+        extend = False
+    else:
+        raise ValueError("This should not happen")
+
+    # Extend the merged poly line points
+    if extend:
+        if (
+            not merged_polyline.connected_cell_points[-1].index_1
+            == new_cell_point_ids[0].index_1
+        ):
+            merged_polyline.connected_cell_points[-1].index_2 = new_cell_point_ids[
+                0
+            ].index_1
+        merged_polyline.connected_cell_points.extend(new_cell_point_ids[1:])
+        next_start_index = -1
+    else:
+        if (
+            not merged_polyline.connected_cell_points[0].index_1
+            == new_cell_point_ids[-1].index_1
+        ):
+            merged_polyline.connected_cell_points[0].index_2 = new_cell_point_ids[
+                -1
+            ].index_1
+        merged_polyline.connected_cell_points = (
+            new_cell_point_ids[:-1] + merged_polyline.connected_cell_points
+        )
+        next_start_index = 0
+
+    merge_polyline_data.old_cell_tracker[new_cell.cell_id] = None
+    merged_polyline.last_cell_id = new_cell.cell_id
+    return new_cell_point_ids[next_start_index].index_1
+
+
+def _find_next_connected_polyline(
+    grid: vtk.vtkUnstructuredGrid, merge_polyline_data: _MergePolylineData
+) -> Optional[_MergedPolyline]:
+    """Start with the first old cell that was not found yet. Then search all
+    cells connected to that one.
+
+    Return all point ids that make up the new poly line. Return None if
+    all cells have been found.
+    """
+
+    # Take the next available cell and look for all connected cells
+    for i in merge_polyline_data.old_cell_tracker:
+        if i is not None:
+            next_cell_id = i
+            break
+    else:
+        return None
+
+    merge_polyline_data.old_cell_tracker[next_cell_id] = None
+    merged_polyline = _MergedPolyline(
+        [
+            _MergePoint(index)
+            for index in vtk_id_to_list(grid.GetCell(next_cell_id).GetPointIds())
+        ],
+    )
+    start_id = merged_polyline.connected_cell_points[0].index_1
+    end_id = merged_polyline.connected_cell_points[-1].index_1
+
+    for start_index in [start_id, end_id]:
+        merged_polyline.last_cell_id = next_cell_id
+        next_point_id: Optional[int] = start_index
+        while next_point_id is not None:
+            next_point_id = _add_next_cell(
+                grid,
+                merge_polyline_data,
+                merged_polyline,
+                next_point_id,
+            )
+
+    return merged_polyline
+
+
+def _insert_point_by_index(
+    source_grid: vtk.vtkUnstructuredGrid,
+    target_grid: vtk.vtkUnstructuredGrid,
+    merge_point: _MergePoint,
+) -> int:
+    """Insert a point into the target grid using one or two point indices
+    (defined by the merge point) from the source grid.
+
+    Args:
+        source_grid: The grid containing the original points and point data.
+        target_grid: The grid to which the new point will be added.
+        merge_point: The object containing information about the point to be merged.
+
+    Returns:
+        int: The index of the newly inserted point in the target grid.
+    """
+
+    if merge_point.point_id is not None:
+        return merge_point.point_id
+
+    target_points = target_grid.GetPoints()
+    new_point_index = target_points.GetNumberOfPoints()
+
+    # Get coordinates from source
+    coords1 = np.array(source_grid.GetPoint(merge_point.index_1))
+    if merge_point.index_2 is None:
+        new_coords = coords1
+    else:
+        coords2 = np.array(source_grid.GetPoint(merge_point.index_2))
+        new_coords = 0.5 * (coords1 + coords2)
+
+    # Insert point coordinates
+    target_points.InsertNextPoint(new_coords)
+
+    # Copy or average point data arrays
+    source_point_data = source_grid.GetPointData()
+    target_point_data = target_grid.GetPointData()
+
+    for array_index in range(source_point_data.GetNumberOfArrays()):
+        source_array = source_point_data.GetArray(array_index)
+        target_array = target_point_data.GetArray(array_index)
+
+        if merge_point.index_2 is None:
+            data_tuple = source_array.GetTuple(merge_point.index_1)
+        else:
+            data1 = np.array(source_array.GetTuple(merge_point.index_1))
+            data2 = np.array(source_array.GetTuple(merge_point.index_2))
+            data_tuple = 0.5 * (data1 + data2)
+
+        target_array.InsertNextTuple(data_tuple)
+
+    merge_point.point_id = new_point_index
+
+    return new_point_index
 
 
 def merge_polylines(
     grid: vtk.vtkUnstructuredGrid,
     *,
     output_grid: vtk.vtkUnstructuredGrid = None,
-    smooth_angle=135.0 * np.pi / 180.0,
-) -> vtk.vtkUnstructuredGrid:
+    smooth_angle: Optional[float] = None,
+    tol: float = 1e-8,
+) -> Optional[vtk.vtkUnstructuredGrid]:
     """Merge lines or polylines with each other that represent a continuous
     curve.
 
-    Args
-    ----
-    grid:
-        Input grid, can only contain lines or polylines. In order for continuous
-        segments to be found, the cells have to connect to the same points via
-        the connectivity matrix.
-    output_grid:
-        If this is given, the merged grid will be stores in this grid. Otherwise,
-        a new grid will be returned.
-    smooth_angle: float
-        Threshold for maximum angle between successive segments along a continuous
-        line.
+    Args:
+        grid:
+            Input grid (can only contain lines or polylines).
+        output_grid:
+            If this is given, the merged grid will be stores in this grid. Otherwise,
+            a new grid will be returned.
+        smooth_angle:
+            Threshold for maximum angle between successive segments along a continuous
+            line. The angle is calculated between the tangents of the lines which are
+            always outward pointing, thus we get the angle pi if the tangents represent
+            a straight polyline.
     """
-
-    if not (output_grid_given := (output_grid is not None)):
-        output_grid = vtk.vtkUnstructuredGrid()
-    output_grid.Initialize()
-
-    # Add the points (and the point data) to the output.
-    output_grid.SetPoints(grid.GetPoints())
-    for i in range(grid.GetPointData().GetNumberOfArrays()):
-        output_grid.GetPointData().AddArray(grid.GetPointData().GetArray(i))
 
     # Check that all cells are lines or polylines.
     n_cells = grid.GetNumberOfCells()
@@ -71,158 +438,59 @@ def merge_polylines(
                 )
             )
 
-    def get_angle_between_lines(tangent_at_point, point_id, cell_id):
-        """Get the dot product of the tangents at the connection point between
-        connecting cells."""
+    if smooth_angle is None:
+        smooth_angle = 135.0 * np.pi / 180.0
 
-        cell_point_ids = vtk_id_to_list(grid.GetCell(cell_id).GetPointIds())
-        if cell_point_ids[-1] == point_id:
-            cell_tangent_point_indices = [-2, -1]
-        elif cell_point_ids[0] == point_id:
-            cell_tangent_point_indices = [1, 0]
-        else:
-            raise ValueError("Given point index does not match the connectivity array")
-        points_for_tangent = [
-            np.array(grid.GetPoint(cell_point_ids[index]))
-            for index in cell_tangent_point_indices
-        ]
-        cell_tangent = points_for_tangent[1] - points_for_tangent[0]
-        cell_tangent = cell_tangent / np.linalg.norm(cell_tangent)
+    if not (output_grid_given := (output_grid is not None)):
+        output_grid = vtk.vtkUnstructuredGrid()
+    output_grid.Initialize()
 
-        # Get the angle between the two
-        return np.dot(tangent_at_point, cell_tangent)
+    # Prepare the output grid
+    output_grid.Initialize()
+    output_points = vtk.vtkPoints()
+    output_points.SetDataType(grid.GetPoints().GetDataType())
+    new_point_data = vtk.vtkPointData()
+    for i in range(grid.GetPointData().GetNumberOfArrays()):
+        old_array = grid.GetPointData().GetArray(i)
+        name = old_array.GetName()
+        new_array = old_array.NewInstance()
+        new_array.SetName(name)
+        new_array.SetNumberOfComponents(old_array.GetNumberOfComponents())
+        new_point_data.AddArray(new_array)
+    output_grid.SetPoints(output_points)
+    output_grid.GetPointData().ShallowCopy(new_point_data)
 
-    def find_next_connected_polyline(grid, old_cell_tracker):
-        """Start with the first old cell that was not found yet. Then search
-        all cells connected to that one.
-
-        Return all point ids that make up the new poly line. Return None
-        if all cells have been found.
-        """
-
-        # Take the next available cell and look for all connected cells
-        for i in old_cell_tracker:
-            if i is not None:
-                next_cell_id = i
-                break
-        else:
-            return None
-
-        def add_next_cell(connected_cell_points, old_cell_tracker, connected_point_id):
-            """Start at the initial point and loop over lines as long as a
-            connectivity is found."""
-            id_list = vtk.vtkIdList()
-            grid.GetPointCells(connected_point_id, id_list)
-            cell_connectivity = vtk_id_to_list(id_list)
-            possible_next_cell_ids = [
-                cell_id
-                for cell_id in cell_connectivity
-                if old_cell_tracker[cell_id] is not None
-            ]
-
-            if len(possible_next_cell_ids) == 0:
-                # In this case we are at the end of the poly line
-                return connected_cell_points, None
-
-            # Get the the outward facing tangent at the given point
-            if connected_cell_points[-1] == connected_point_id:
-                tangent_point_indices = [-2, -1]
-            elif connected_cell_points[0] == connected_point_id:
-                tangent_point_indices = [1, 0]
-            else:
-                raise ValueError(
-                    "Given point index does not match the connectivity array"
-                )
-            points_for_tangent = [
-                np.array(grid.GetPoint(connected_cell_points[index]))
-                for index in tangent_point_indices
-            ]
-            tangent = points_for_tangent[1] - points_for_tangent[0]
-            tangent = tangent / np.linalg.norm(tangent)
-
-            # Check the angle between this line and all connected cells
-            smooth_connected_cells = []
-            for cell_id in cell_connectivity:
-                dot = get_angle_between_lines(tangent, connected_point_id, cell_id)
-                if np.cos(smooth_angle) > dot:
-                    smooth_connected_cells.append(cell_id)
-
-            if len(smooth_connected_cells) == 0 or len(smooth_connected_cells) > 1:
-                # In this case there are either no or multiple lines connected which are
-                # smooth to the given one. There is no unique way to continue this, so we
-                # stop here.
-                return connected_cell_points, None
-            elif old_cell_tracker[smooth_connected_cells[0]] is None:
-                # The smooth connected cell is already accounted for in the new cells
-                return connected_cell_points, None
-            else:
-                # We want to continue along the found smooth cell
-                new_cell_id = smooth_connected_cells[0]
-
-            # Add the new cell and its points (in correct order).
-            new_cell_point_ids = vtk_id_to_list(grid.GetCell(new_cell_id).GetPointIds())
-            if new_cell_point_ids[0] == connected_cell_points[-1]:
-                # First point of this cell is added to the last point of the last
-                # cell.
-                extend = True
-            elif new_cell_point_ids[-1] == connected_cell_points[-1]:
-                # Last point of this cell is added to the last point of the last
-                # cell.
-                extend = True
-                new_cell_point_ids.reverse()
-            elif new_cell_point_ids[0] == connected_cell_points[0]:
-                # First point of this cell is added to the first point of the last
-                # cell.
-                extend = False
-                new_cell_point_ids.reverse()
-            elif new_cell_point_ids[-1] == connected_cell_points[0]:
-                # Last point of this cell is added to the first point of the last
-                # cell.
-                extend = False
-            else:
-                raise ValueError("This should not happen")
-
-            # Extend the merged poly line points
-            if extend:
-                connected_cell_points.extend(new_cell_point_ids[1:])
-                next_start_index = -1
-            else:
-                connected_cell_points = new_cell_point_ids[:-1] + connected_cell_points
-                next_start_index = 0
-
-            old_cell_tracker[new_cell_id] = None
-            return connected_cell_points, new_cell_point_ids[next_start_index]
-
-        old_cell_tracker[next_cell_id] = None
-        connected_cell_points = vtk_id_to_list(grid.GetCell(next_cell_id).GetPointIds())
-        start_id = connected_cell_points[0]
-        end_id = connected_cell_points[-1]
-
-        for start_index in [start_id, end_id]:
-            next_point_id = start_index
-            while next_point_id is not None:
-                connected_cell_points, next_point_id = add_next_cell(
-                    connected_cell_points, old_cell_tracker, next_point_id
-                )
-
-        return connected_cell_points
+    # Search matching points
+    point_coordinates = np.array(
+        [grid.GetPoint(i) for i in range(grid.GetNumberOfPoints())]
+    )
+    kd_tree = KDTree(point_coordinates)
+    pairs = kd_tree.query_pairs(r=tol, output_type="ndarray")
+    partner_list, n_partners = pairs_to_partner_list(pairs, len(point_coordinates))
+    partner_grouped = point_partners_to_partner_indices(partner_list, n_partners)
 
     # Start with the first cell and search all cells connected to that cell and so on.
     # Then do the same with the first cell that was not found and so on.
-    old_cell_tracker = list(range(n_cells))
-    new_cells = []
+    merge_polyline_data = _MergePolylineData(
+        list(range(n_cells)), partner_list, partner_grouped, smooth_angle
+    )
+    new_cells_connectivity = []
     while True:
-        connected_cell_point_ids = find_next_connected_polyline(grid, old_cell_tracker)
-
-        if connected_cell_point_ids is None:
+        merged_polyline = _find_next_connected_polyline(grid, merge_polyline_data)
+        if merged_polyline is None:
             break
-        else:
-            # Create the found poly line
-            new_cell = vtk.vtkPolyLine()
-            new_cell.GetPointIds().SetNumberOfIds(len(connected_cell_point_ids))
-            for i, index in enumerate(connected_cell_point_ids):
-                new_cell.GetPointIds().SetId(i, index)
-            new_cells.append(new_cell)
+        merged_polyline.check_closed(merge_polyline_data)
+        new_cells_connectivity.append(merged_polyline.connected_cell_points)
+
+    # Create the found poly line
+    new_cells = []
+    for connectivity in new_cells_connectivity:
+        new_cell = vtk.vtkPolyLine()
+        new_cell.GetPointIds().SetNumberOfIds(len(connectivity))
+        for i, merge_point in enumerate(connectivity):
+            new_point_index = _insert_point_by_index(grid, output_grid, merge_point)
+            new_cell.GetPointIds().SetId(i, new_point_index)
+        new_cells.append(new_cell)
 
     # Add all new cells to the output data
     output_grid.Allocate(len(new_cells), 1)
@@ -231,3 +499,5 @@ def merge_polylines(
 
     if not output_grid_given:
         return output_grid
+    else:
+        return None

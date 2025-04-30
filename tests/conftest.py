@@ -164,9 +164,12 @@ def assert_results_equal() -> Callable:
 
         grid_1 = _get_grid(reference)
         grid_2 = _get_grid(result)
-        equal, output = compare_grids(grid_1, grid_2, output=True, rtol=rtol, atol=atol)
+        result = compare_grids(grid_1, grid_2, output=True, rtol=rtol, atol=atol)
 
-        if not equal:
-            raise AssertionError("\n".join(output))
+        if not isinstance(result, bool):
+            if not result[0]:
+                raise AssertionError("\n".join(result[1]))
+        else:
+            assert False, "Got unexpected return variable from 'compare_grids'"
 
     return _assert_results_equal
