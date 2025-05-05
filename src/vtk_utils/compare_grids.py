@@ -123,7 +123,7 @@ def compare_grids(
     lines.append(string)
 
     compare_value, string = compare_arrays(
-        grid_1.GetFaces(), grid_2.GetFaces(), "face_connectivity"
+        grid_1.GetPolyhedronFaces(), grid_2.GetPolyhedronFaces(), "face_connectivity"
     )
     return_value = compare_value and return_value
     lines.append(string)
