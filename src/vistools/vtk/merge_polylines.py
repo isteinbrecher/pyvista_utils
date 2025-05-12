@@ -22,6 +22,7 @@
 """Merge lines or polylines with each other that represent a continuous
 curve."""
 
+from dataclasses import dataclass
 from typing import List, Optional
 
 import numpy as np
@@ -35,22 +36,17 @@ from vistools.vtk.geometric_search import (
 from vistools.vtk.vtk_data_structures_utils import vtk_id_to_list
 
 
+@dataclass
 class _MergePolylineData:
     """Common data required to merge polylines."""
 
-    def __init__(
-        self,
-        old_cell_tracker: List[Optional[int]],
-        partner_list: List[int],
-        partner_grouped: List[List[int]],
-        smooth_angle: float,
-    ):
-        self.old_cell_tracker = old_cell_tracker
-        self.partner_list = partner_list
-        self.partner_grouped = partner_grouped
-        self.smooth_angle = smooth_angle
+    old_cell_tracker: List[Optional[int]]
+    partner_list: List[int]
+    partner_grouped: List[List[int]]
+    smooth_angle: float
 
 
+@dataclass
 class _MergePoint:
     """Structure to hold either one or two point IDs.
 
@@ -59,22 +55,21 @@ class _MergePoint:
     merged.
     """
 
-    def __init__(self, index_1: int):
-        self.index_1 = index_1
-        self.index_2: Optional[int] = None
+    index_1: int
+    index_2: Optional[int] = None
 
-        # ID of this point in the new grid
-        self.point_id = None
+    # ID of this point in the new grid
+    point_id = None
 
 
+@dataclass
 class _PossibleCell:
     """Structure for next possible cells to add to the current merged
     polyline."""
 
-    def __init__(self, cell_id: int, point_id: int):
-        self.cell_id = cell_id
-        self.point_id = point_id
-        self.tangent = None
+    cell_id: int
+    point_id: int
+    tangent = None
 
     def set_cell_tangent(self, grid: vtk.vtkUnstructuredGrid) -> None:
         """Evaluate and set the tangent of this possible next cell.
@@ -93,12 +88,12 @@ class _PossibleCell:
         self.tangent = _get_indices_tangent(grid, cell_point_ids, self.point_id)
 
 
+@dataclass
 class _MergedPolyline:
     """Structure to hold a single merged polyline."""
 
-    def __init__(self, connected_cell_points: List[_MergePoint]):
-        self.connected_cell_points = connected_cell_points
-        self.last_cell_id: Optional[int] = None
+    connected_cell_points: List[_MergePoint]
+    last_cell_id: Optional[int] = None
 
     def check_closed(self, data: _MergePolylineData) -> None:
         """Check if first and last point are the same, either by node ID or by
