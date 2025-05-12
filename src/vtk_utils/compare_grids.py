@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 """Compare two grids to each other."""
 
+import sys
 from typing import Tuple, Union
 
 import numpy as np
@@ -122,9 +123,18 @@ def compare_grids(
     return_value = compare_value and return_value
     lines.append(string)
 
-    compare_value, string = compare_arrays(
-        grid_1.GetPolyhedronFaces(), grid_2.GetPolyhedronFaces(), "face_connectivity"
-    )
+    if sys.version_info[1] < 13:
+        compare_value, string = compare_arrays(
+            grid_1.GetFaces(),
+            grid_2.GetFaces(),
+            "face_connectivity",
+        )
+    else:
+        compare_value, string = compare_arrays(
+            grid_1.GetPolyhedronFaces(),
+            grid_2.GetPolyhedronFaces(),
+            "face_connectivity",
+        )
     return_value = compare_value and return_value
     lines.append(string)
 
