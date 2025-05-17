@@ -25,7 +25,7 @@ import os
 
 import pyvista as pv
 
-from pyvista_utils.temporal_interpolator import temporal_interpolator
+from pvtools.temporal_interpolator import temporal_interpolator
 
 
 def test_pyvista_temporal_interpolator(

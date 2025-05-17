@@ -24,8 +24,8 @@
 import pytest
 import pyvista
 
-from pyvista_utils.polyline_cross_section import polyline_cross_section
-from vtk_utils.merge_polylines import merge_polylines
+from pvtools.polyline_cross_section import polyline_cross_section
+from vtktools.merge_polylines import merge_polylines
 
 
 @pytest.mark.parametrize(

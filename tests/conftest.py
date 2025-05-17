@@ -29,7 +29,7 @@ import pytest
 import pyvista as pv
 import vtk
 
-from vtk_utils.compare_grids import compare_grids
+from vtktools.compare_grids import compare_grids
 
 
 @pytest.fixture(scope="session")
