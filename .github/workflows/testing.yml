@@ -37,10 +37,12 @@ jobs:
           fi
 
   test_suite:
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os-version }} python${{ matrix.python-version }}
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        os-version: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.9", "3.12"]
+    runs-on: ${{ matrix.os-version }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
