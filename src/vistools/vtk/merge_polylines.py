@@ -28,11 +28,11 @@ import numpy as np
 import vtk
 from scipy.spatial import KDTree
 
-from vtk_utils.geometric_search import (
+from vistools.vtk.geometric_search import (
     pairs_to_partner_list,
     point_partners_to_partner_indices,
 )
-from vtk_utils.vtk_data_structures_utils import vtk_id_to_list
+from vistools.vtk.vtk_data_structures_utils import vtk_id_to_list
 
 
 class _MergePolylineData:

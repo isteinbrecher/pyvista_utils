@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""Define the main namespace of pyvista_utils."""
+"""Define the main namespace of vtktools."""
 
-from pyvista_utils.sort_grid import sort_grid
+from vistools.vtk.compare_grids import compare_grids
+from vistools.vtk.merge_polylines import merge_polylines
+from vistools.vtk.polyline_cross_section import polyline_cross_section

@@ -24,8 +24,8 @@
 import pytest
 import pyvista
 
-from vtk_utils.merge_polylines import merge_polylines
-from vtk_utils.polyline_cross_section import polyline_cross_section
+from vistools.vtk.merge_polylines import merge_polylines
+from vistools.vtk.polyline_cross_section import polyline_cross_section
 
 
 @pytest.mark.parametrize("closed", [True, False])

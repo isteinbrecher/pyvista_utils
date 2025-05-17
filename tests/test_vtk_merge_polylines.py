@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 import pyvista as pv
 
-from vtk_utils.merge_polylines import merge_polylines
+from vistools.vtk.merge_polylines import merge_polylines
 
 CLEAN_GRID_TOL = 1e-10
 

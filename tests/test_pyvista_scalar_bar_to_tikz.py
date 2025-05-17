@@ -26,7 +26,7 @@ from pathlib import Path
 import pyvista as pv
 from pyvista import examples
 
-from pyvista_utils.scalar_bar_to_tikz import export_to_tikz
+from vistools.pyvista.scalar_bar_to_tikz import export_to_tikz
 
 
 def test_pyvista_scalar_bar_to_tikz(

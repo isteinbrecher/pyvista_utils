@@ -27,7 +27,7 @@ import numpy as np
 import pyvista as pv
 import vtk
 
-from vtk_utils.vtk_data_structures_utils import vtk_id_to_list
+from vistools.vtk.vtk_data_structures_utils import vtk_id_to_list
 
 
 def sort_grid(

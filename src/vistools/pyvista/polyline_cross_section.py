@@ -23,7 +23,7 @@
 
 import pyvista as pv
 
-from vtk_utils.polyline_cross_section import (
+from vistools.vtk.polyline_cross_section import (
     polyline_cross_section as vtk_polyline_cross_section,
 )
 
