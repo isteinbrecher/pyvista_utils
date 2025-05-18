@@ -207,7 +207,7 @@ def export_to_tikz(
 
     # Set the header of te TikZ code
     tikz_code = [
-        "%% This file was created with pyvista_utils",
+        "%% This file was created with vtktools",
         "%% Use the following includes in the LaTeX header:",
         "%\\usepackage{tikz}",
         "%\\usepackage{pgfplots}",

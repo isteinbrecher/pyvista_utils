@@ -3,20 +3,27 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyvista_utils"
+name = "vistools"
 authors = [
     {name = "Ivo Steinbrecher", email = "ivo.steinbrecher@unibw.de"},
 ]
-description = "Utilities for pyvista"
+description = "Utility functionality for vtk and pyvista"
 dependencies = [
-    "pyvista<0.45.0",
     "numpy",
-    "opencv-python",
     "scipy",
+    "vtk"
 ]
-dynamic = ["version"]
+version = "0.1.0"
+
+[project.urls]
+Repository = "https://github.com/isteinbrecher/vtktools/"
+Issues = "https://github.com/isteinbrecher/vtktools/issues/"
 
 [project.optional-dependencies]
+pyvista = [
+  "pyvista<0.45.0",
+  "opencv-python"
+]
 dev = [
   "pre-commit",
   "pytest",

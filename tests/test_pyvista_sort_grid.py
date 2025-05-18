@@ -26,7 +26,7 @@ import os
 import numpy as np
 import pyvista
 
-from pyvista_utils.sort_grid import sort_grid
+from vistools.pyvista.sort_grid import sort_grid
 
 
 def test_pyvista_sort_grid_complete(
