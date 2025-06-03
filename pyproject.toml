@@ -22,7 +22,7 @@ Issues = "https://github.com/isteinbrecher/vistools/issues/"
 
 [project.optional-dependencies]
 pyvista = [
-  "pyvista<0.45.0",
+  "pyvista",
   "opencv-python"
 ]
 dev = [

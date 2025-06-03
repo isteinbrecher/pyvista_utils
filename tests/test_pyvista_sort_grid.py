@@ -137,9 +137,9 @@ def test_pyvista_sort_grid_mixed_types(
     ).read()
 
     # Sort the parallel grid
-    mesh_mixed_cells.point_data["sort_id"] = range(mesh_mixed_cells.number_of_points)[
-        ::-1
-    ]
+    mesh_mixed_cells.point_data["sort_id"] = np.arange(
+        mesh_mixed_cells.number_of_points - 1, -1, -1, dtype=np.int64
+    )
     mesh_mixed_cells_sorted = sort_grid(mesh_mixed_cells, sort_point_field=["sort_id"])
 
     # Compare with the reference grid
