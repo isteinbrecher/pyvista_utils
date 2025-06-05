@@ -26,6 +26,8 @@ from typing import Tuple, Union
 import numpy as np
 from vtk.util import numpy_support as vtk_numpy_support
 
+from vistools.vtk.utils import get_vtk_version
+
 
 def compare_grids(
     grid_1, grid_2, *, rtol=None, atol=None, output=False
@@ -76,8 +78,8 @@ def compare_grids(
                 f"{name}: Number of components does not match, got {n_1} and {n_2}",
             )
 
-        t_1 = array_1.GetDataTypeAsString()
-        t_2 = array_2.GetDataTypeAsString()
+        t_1 = array_1.GetDataType()
+        t_2 = array_2.GetDataType()
         if not t_1 == t_2:
             return (
                 False,
@@ -122,9 +124,24 @@ def compare_grids(
     return_value = compare_value and return_value
     lines.append(string)
 
-    compare_value, string = compare_arrays(
-        grid_1.GetFaces(), grid_2.GetFaces(), "face_connectivity"
-    )
+    if get_vtk_version() < (9, 4, 0):
+        compare_value, string = compare_arrays(
+            grid_1.GetFaces(),
+            grid_2.GetFaces(),
+            "face_connectivity",
+        )
+    else:
+        faces1 = grid_1.GetPolyhedronFaces()
+        faces2 = grid_2.GetPolyhedronFaces()
+        if (faces1 is None) != (faces2 is None):
+            return_value = False
+            lines.append("face_connectivity: Could not find both face data arrays")
+        elif faces1 is not None and faces2 is not None:
+            compare_value, string = compare_arrays(
+                faces1.GetData(),
+                faces2.GetData(),
+                "face_connectivity",
+            )
     return_value = compare_value and return_value
     lines.append(string)
 

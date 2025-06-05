@@ -58,7 +58,6 @@ def test_pyvista_polyline_cross_section(
         closed=closed,
         separate_surfaces=separate_surfaces,
     )
-    helix_3d = helix_3d.connectivity()
 
     # Compare with reference result
     variant_name = "{}_{}".format(
