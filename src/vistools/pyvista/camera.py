@@ -81,6 +81,12 @@ def capture_camera_settings(
     plotter.add_key_event("c", print_camera_state)
     plotter.add_key_event("m", zoom_in)
     plotter.add_key_event("n", zoom_out)
+    plotter.add_text(
+        "Hotkeys:\n[c] Print camera settings\n[m] Zoom in\n[n] Zoom out",
+        position="lower_right",
+        font_size=12,
+        color="black",
+    )
 
     # Start viewer
     plotter.show(auto_close=False)
